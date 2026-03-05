@@ -1910,7 +1910,28 @@ CRITICAL RULES:
       clean = clean.substring(firstBrace, lastBrace + 1);
     }
 
-    const parsed = JSON.parse(clean);
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch(jsonErr) {
+      // Gemini occasionally returns truncated JSON — auto-retry once
+      console.warn('JSON parse failed, auto-retrying once...', jsonErr.message);
+      await new Promise(r => setTimeout(r, 1500)); // wait 1.5s before retry
+      const retryRes = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: systemPrompt + '\n\n' + livePriceContext + '\n\nUser Query: ' + query }] }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 4000 }
+        })
+      });
+      if (!retryRes.ok) throw new Error('Retry also failed: HTTP ' + retryRes.status);
+      const retryData = await retryRes.json();
+      const retryRaw = retryData.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      const retryClean = retryRaw.replace(/```json/g,'').replace(/```/g,'').trim();
+      const f1 = retryClean.indexOf('{'), l1 = retryClean.lastIndexOf('}');
+      parsed = JSON.parse(f1 !== -1 && l1 > f1 ? retryClean.substring(f1, l1+1) : retryClean);
+    }
     return renderResult(parsed, query);
 
   } catch(err) {
