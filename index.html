@@ -925,9 +925,60 @@
     font-family: 'JetBrains Mono', monospace;
     background: var(--surface);
   }
+
+  /* ── GEMINI KEY MODAL ── */
+  .key-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; backdrop-filter: blur(4px);
+  }
+  .key-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 32px; width: 90%; max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .key-modal-logo { font-size: 22px; font-weight: 800; color: var(--saffron); margin-bottom: 8px; }
+  .key-modal-title { font-size: 15px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+  .key-modal-sub { font-size: 11px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .key-modal input {
+    width: 100%; background: var(--ink); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text);
+    font-size: 13px; font-family: 'JetBrains Mono', monospace;
+    box-sizing: border-box; margin-bottom: 12px; outline: none;
+  }
+  .key-modal input:focus { border-color: var(--saffron); }
+  .key-modal-btn {
+    width: 100%; background: var(--saffron); color: #000;
+    border: none; border-radius: 8px; padding: 12px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .key-modal-btn:hover { opacity: 0.9; }
+  .key-modal-link { font-size: 10px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .key-modal-link a { color: var(--saffron); text-decoration: none; }
+
 </style>
 </head>
 <body>
+
+<!-- ── GEMINI API KEY MODAL ── -->
+<div class="key-modal-overlay" id="keyModal" style="display:none">
+  <div class="key-modal">
+    <div class="key-modal-logo">DALAL.AI</div>
+    <div class="key-modal-title">Enter your Gemini API Key</div>
+    <div class="key-modal-sub">
+      Your key is stored only in your browser (localStorage).<br>
+      It is never sent anywhere except directly to Google's API.<br>
+      Get a free key at aistudio.google.com
+    </div>
+    <input type="password" id="keyInput" placeholder="AIzaSy..." autocomplete="off" />
+    <button class="key-modal-btn" onclick="saveGeminiKey()">SAVE &amp; CONTINUE</button>
+    <div class="key-modal-link">
+      <a href="https://aistudio.google.com/app/apikey" target="_blank">Get free API key at Google AI Studio →</a>
+    </div>
+  </div>
+</div>
+
 
 <header>
   <div class="logo">DALAL<span>.AI</span></div>
@@ -1222,7 +1273,7 @@ const CONFIG = {
   //  ⚠️  NOTE: This key is visible in browser DevTools.
   //      If someone finds it, they can use your free quota.
   //      To reset: go to aistudio.google.com → API Keys → Delete & recreate.
-  GEMINI_API_KEY: "",
+  GEMINI_API_KEY: "", // loaded from localStorage at runtime
 
   // ── CLOUDFLARE WORKER URL ────────────────────────────────────
   //  Step 1: Go to cloudflare.com → Workers & Pages → Create Worker
@@ -2226,6 +2277,47 @@ function renderAnalysis(d, query) {
     ${sections}
   `;
 }
+
+// ── GEMINI KEY MANAGEMENT ──
+function loadGeminiKey() {
+  const stored = localStorage.getItem('dalal_gemini_key');
+  if (stored && stored.startsWith('AIza')) {
+    CONFIG.GEMINI_API_KEY = stored;
+    document.getElementById('keyModal').style.display = 'none';
+    return true;
+  }
+  // Show modal
+  document.getElementById('keyModal').style.display = 'flex';
+  return false;
+}
+
+function saveGeminiKey() {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key || !key.startsWith('AIza')) {
+    alert('Please enter a valid Gemini API key (starts with AIza)');
+    return;
+  }
+  localStorage.setItem('dalal_gemini_key', key);
+  CONFIG.GEMINI_API_KEY = key;
+  document.getElementById('keyModal').style.display = 'none';
+  // Start data loading now that key is set
+  refreshAllLiveData();
+}
+
+// Allow Enter key in input
+document.getElementById('keyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') saveGeminiKey();
+});
+
+// Also add a small "change key" button in header
+function resetGeminiKey() {
+  localStorage.removeItem('dalal_gemini_key');
+  document.getElementById('keyModal').style.display = 'flex';
+}
+
+// Check key on load — if present skip modal, else show it
+const keyReady = loadGeminiKey();
+
 </script>
 </body>
 </html>
