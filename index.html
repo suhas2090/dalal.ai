@@ -1167,18 +1167,18 @@
       <div class="pb-label">FII / DII Flow (₹ Cr) <span id="fii-date" style="font-size:8px;color:var(--muted);float:right;font-family:monospace">as of —</span></div>
       <div class="fii-bar-wrap">
         <div class="fii-row">
-          <span class="fii-label">FII</span>
+          <span class="fii-label">FPI</span>
           <div class="fii-bar-bg">
-            <div class="fii-bar" id="fii-bar" style="width:62%; background:var(--green)"></div>
+            <div class="fii-bar" id="fii-bar" style="width:50%; background:var(--green)"></div>
           </div>
-          <span class="fii-val" id="fii-val" style="color:var(--green)">+4,218</span>
+          <span class="fii-val" id="fii-val" style="color:var(--muted)">—</span>
         </div>
         <div class="fii-row">
           <span class="fii-label">DII</span>
           <div class="fii-bar-bg">
-            <div class="fii-bar" id="dii-bar" style="width:45%; background:var(--saffron)"></div>
+            <div class="fii-bar" id="dii-bar" style="width:50%; background:var(--saffron)"></div>
           </div>
-          <span class="fii-val" id="dii-val" style="color:var(--saffron)">+3,102</span>
+          <span class="fii-val" id="dii-val" style="color:var(--muted)">—</span>
         </div>
 
       </div>
@@ -1443,11 +1443,11 @@ function applyToUI(raw, type) {
 
 // ── NEWS — rss2json with fallback rotation ──
 const NEWS_FEEDS = [
-  { name:'ET Markets',    url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
-  { name:'Moneycontrol',  url:'https://www.moneycontrol.com/rss/business.xml' },
-  { name:'NDTV Profit',   url:'https://feeds.feedburner.com/ndtvprofit-latest' },
-  { name:'Business Std',  url:'https://www.business-standard.com/rss/markets-106.rss' },
-  { name:'Financial Exp', url:'https://www.financialexpress.com/market/feed/' },
+  { name:'ET Markets',   url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
+  { name:'ET Markets',   url:'https://economictimes.indiatimes.com/rssfeeds/1310891583.cms' },
+  { name:'Mint Markets', url:'https://www.livemint.com/rss/markets' },
+  { name:'BS Markets',   url:'https://www.business-standard.com/rss/markets-106.rss' },
+  { name:'Hindu Biz',    url:'https://www.thehindubusinessline.com/markets/feeder/default.rss' },
 ];
 let newsFeedIdx = 0;
 
@@ -1466,47 +1466,81 @@ function cleanTitle(t) {
 }
 
 async function refreshNews() {
-  for (let attempt = 0; attempt < NEWS_FEEDS.length; attempt++) {
-    const feed = NEWS_FEEDS[newsFeedIdx % NEWS_FEEDS.length];
-    newsFeedIdx++;
-    try {
-      const rssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=6`;
-      const res = await fetch(rssUrl);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.status !== 'ok' || !data.items?.length) continue;
+  try {
+    const res = await fetch(WORKER_URL + '?news=1');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.items || data.items.length === 0) return;
 
-      const container = document.getElementById('news-container');
-      if (!container) return;
+    const container = document.getElementById('news-container');
+    if (!container) return;
 
-      container.innerHTML = data.items.slice(0,6).map(item => {
-        const title = cleanTitle(item.title);
-        return `<div class="news-item">
-          <div class="ni-source">${feed.name}</div>
-          <div class="ni-title">${title.substring(0,92)}${title.length>92?'…':''}</div>
-          <div class="ni-time">${timeAgo(item.pubDate)}</div>
-        </div>`;
-      }).join('');
+    container.innerHTML = data.items.map(item => {
+      const title = (item.title || '').replace(/<!\[CDATA\[/g,'').replace(/\]\]>/g,'').replace(/&amp;/g,'&').replace(/&#039;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+      const short = title.length > 90 ? title.substring(0, 90) + '…' : title;
+      const diff  = item.pubDate ? Math.round((Date.now() - new Date(item.pubDate).getTime()) / 60000) : 0;
+      const ago   = diff < 60 ? diff + 'm ago' : Math.round(diff/60) + 'h ago';
+      return '<div class="news-item"><div class="ni-source">' + (item.source||'Market News') + '</div><div class="ni-title">' + short + '</div><div class="ni-time">' + ago + '</div></div>';
+    }).join('');
 
-      const ts = document.getElementById('news-refresh-time');
+    const ts = document.getElementById('news-refresh-time');
+    if (ts) {
       const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'});
-      if (ts) ts.textContent = 'updated '+now+' IST';
-      return;
-    } catch(e) { continue; }
-  }
+      ts.textContent = 'updated ' + now + ' IST';
+    }
+  } catch(e) { console.warn('News failed:', e.message); }
 }
 
-// ── FII/DII — once daily at 9 PM IST ──
+// ── FII/DII — fetch from NSE via Cloudflare Worker ──
 let fiiLastDate = null;
+
+async function fetchFIIDII() {
+  try {
+    const res = await fetch(WORKER_URL + '?fiidii=1');
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d.error || (d.fpi_net === null && d.dii_net === null)) {
+      console.warn('FII/DII: no data from NSE', d);
+      return;
+    }
+
+    const fpiNet = parseFloat(d.fpi_net) || 0;
+    const diiNet = parseFloat(d.dii_net) || 0;
+    const maxVal = Math.max(Math.abs(fpiNet), Math.abs(diiNet), 1000);
+
+    // FPI row
+    const fpiEl  = document.getElementById('fii-val');
+    const fpiBar = document.getElementById('fii-bar');
+    if (fpiEl) {
+      const up = fpiNet >= 0;
+      fpiEl.textContent = (up ? '+' : '') + Math.round(fpiNet).toLocaleString('en-IN');
+      fpiEl.style.color = up ? 'var(--green)' : 'var(--red)';
+      if (fpiBar) { fpiBar.style.width = Math.min(Math.abs(fpiNet)/maxVal*90,90)+'%'; fpiBar.style.background = up?'var(--green)':'var(--red)'; }
+    }
+
+    // DII row
+    const diiEl  = document.getElementById('dii-val');
+    const diiBar = document.getElementById('dii-bar');
+    if (diiEl) {
+      const up = diiNet >= 0;
+      diiEl.textContent = (up ? '+' : '') + Math.round(diiNet).toLocaleString('en-IN');
+      diiEl.style.color = up ? 'var(--green)' : 'var(--red)';
+      if (diiBar) { diiBar.style.width = Math.min(Math.abs(diiNet)/maxVal*90,90)+'%'; diiBar.style.background = up?'var(--saffron)':'var(--red)'; }
+    }
+
+    // Date
+    const dateEl = document.getElementById('fii-date');
+    if (dateEl && d.date) dateEl.textContent = 'as of ' + d.date;
+
+  } catch(e) { console.warn('FII/DII fetch error:', e.message); }
+}
+
 function checkFIIDII() {
-  const now   = new Date();
-  const ist   = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
-  const today = ist.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  if (ist.getHours() >= 21 && fiiLastDate !== today) {
+  const ist = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+  const today = ist.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+  if (fiiLastDate !== today) {
     fiiLastDate = today;
-    const el = document.getElementById('fii-date');
-    if (el) el.textContent = 'as of ' + today;
-    console.log('FII/DII date updated:', today);
+    fetchFIIDII(); // fetch once per day, first time after page load
   }
 }
 
