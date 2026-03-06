@@ -1713,8 +1713,40 @@ function extractSymbol(query) {
   };
   const q = query.toLowerCase().replace(/research|analysis|deep dive|fundamental|technical|stock|share|price|compare|vs|and/g,'').trim();
   for (const [k,v] of Object.entries(KNOWN)) { if (q.includes(k)) return v; }
-  const caps = query.match(/[A-Z]{2,}/);
-  return caps ? caps[0] : null;
+  // Check for ALL CAPS ticker in query (e.g. "RECLTD research")
+  const caps = query.match(/\b[A-Z]{2,10}\b/g);
+  if (caps) {
+    // Filter out common English words
+    const skip = new Set(['NSE','BSE','IPO','FII','DII','ETF','NFO','MF','PE','EPS','ROE','ROCE','CAGR','YOY','QOQ','TTM','CMP','LTP','ATH','ATL','SIP','GDP','RBI','SEBI','CBI','ED']);
+    const ticker = caps.find(c => !skip.has(c));
+    if (ticker) return ticker;
+  }
+  return null;
+}
+
+// For unknown companies — ask Gemini to identify the NSE symbol
+async function resolveSymbolViaYahoo(query) {
+  // Use Yahoo Finance autocomplete search to find NSE symbol for any company name
+  try {
+    const clean = query.toLowerCase()
+      .replace(/research|analysis|deep dive|fundamental|technical|stock|share|price|compare|vs|and|ltd|limited|industries|corporation|company/g, '')
+      .trim();
+    const searchUrl = 'https://query1.finance.yahoo.com/v1/finance/search?q=' + encodeURIComponent(clean + ' NSE') + '&quotesCount=5&newsCount=0&listsCount=0';
+    const res = await fetch(WORKER_URL + '?search=' + encodeURIComponent(clean + ' NSE'));
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Worker returns array of {symbol, name, exchange}
+    if (!data.quotes || data.quotes.length === 0) return null;
+    // Find first NSE result
+    const nse = data.quotes.find(q => q.exchange === 'NSI' || (q.symbol && q.symbol.endsWith('.NS')));
+    if (!nse) return null;
+    const sym = nse.symbol.replace('.NS', '');
+    console.log('Yahoo search resolved:', clean, '->', sym);
+    return sym;
+  } catch(e) {
+    console.warn('Yahoo search failed:', e.message);
+    return null;
+  }
 }
 
 const AGENT_STEPS = [
@@ -1749,19 +1781,32 @@ async function runQuery(query) {
   await sleep(300);
   document.getElementById('step0').classList.add('done');
 
-  // Step 1 — get LIVE CMP via Cloudflare Worker (cache first, then fresh fetch)
+  // Step 1 — get LIVE CMP via Cloudflare Worker
   document.getElementById('step1').classList.add('active');
   let liveData = null;
+
+  // If symbol not found in KNOWN map, ask Gemini to identify it
+  if (!sym) {
+    sym = await resolveSymbolViaYahoo(query);
+    console.log('Gemini resolved symbol:', sym);
+  }
+
   if (sym) {
     let p = priceCache[sym] || null;
     if (!p) {
-      // Not in cache yet — fetch fresh via Worker
+      // Try .NS suffix first (NSE), then without suffix (indices/forex)
       const yahooSym = sym + '.NS';
       const fresh = await workerFetch([yahooSym]);
       const raw = fresh[yahooSym];
       if (raw) {
         p = fmt(raw);
         if (p) priceCache[sym] = p;
+      }
+      // If .NS failed, try bare symbol (e.g. BAJAJ-AUTO needs special handling)
+      if (!p) {
+        const fresh2 = await workerFetch([sym + '.BO']); // try BSE
+        const raw2 = fresh2[sym + '.BO'];
+        if (raw2) { p = fmt(raw2); if (p) priceCache[sym] = p; }
       }
     }
     if (p) liveData = { ...p, sym };
