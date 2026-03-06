@@ -1791,13 +1791,18 @@ async function callClaudeAgent(query, liveData) {
 
   // Build live price context to inject into prompt
   const livePriceContext = liveData
-    ? `LIVE MARKET DATA fetched right now — USE THESE EXACT VALUES:
-- Symbol: ${liveData.sym}
-- Current CMP: ₹${liveData.priceStr}
-- Today Change: ${liveData.chgStr}
-- Change Amount: ${liveData.chgAmtStr}
+    ? `CRITICAL LIVE PRICE OVERRIDE — THIS OVERRIDES YOUR TRAINING DATA:
+The current market price of ${liveData.sym} has been fetched RIGHT NOW from Yahoo Finance NSE feed.
+YOU MUST USE THIS EXACT PRICE IN YOUR RESPONSE. DO NOT USE YOUR TRAINING DATA PRICE UNDER ANY CIRCUMSTANCES.
+
+LIVE NSE DATA (fetched ${new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})} IST):
+- NSE Symbol: ${liveData.sym}.NS
+- CURRENT CMP: ₹${liveData.priceStr} ← USE THIS EXACT VALUE IN THE price FIELD
+- Today Change: ${liveData.chgStr} (₹${liveData.chgAmtStr})
 - Direction: ${liveData.up ? 'UP ▲' : 'DOWN ▼'} today
-IMPORTANT: Use ₹${liveData.priceStr} as the exact "price" field value. Never use stale training data price.`
+
+MANDATORY: The "price" field in your JSON response MUST be exactly ${liveData.price.toFixed(2)}
+If you use any other price value your response will be considered wrong.`
     : `NOTE: Live price unavailable for this query. Use approximate training data and add "(approx)" after price.`;
 
 
