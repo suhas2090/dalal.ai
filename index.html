@@ -1237,6 +1237,22 @@
   .mnp-hl-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); white-space: nowrap; margin-top: 1px; }
   .mnp-headline-loading { padding: 14px; font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
+  .live-tv-panel {
+    max-width: 523px;
+  }
+  .live-tv-panel .mnp-tv-tabs,
+  .live-tv-panel .mnp-tv-frame-wrap {
+    width: 100%;
+    max-width: 523px;
+  }
+  .live-tv-panel .mnp-tv-iframe {
+    height: 323px;
+  }
+
+  .panel-block.news-panel-right .mnp-tabs {
+    flex-wrap: wrap;
+  }
+
   /* ── MMI BLOCK ── */
   .mmi-wrap { padding: 4px 0 6px; }
   .mmi-gauge-row { position: relative; display: flex; justify-content: center; align-items: center; }
@@ -1554,7 +1570,7 @@
     </div>
 
     <!-- ② COMPACT NEWS PANEL -->
-    <div class="main-news-panel">
+    <div class="main-news-panel live-tv-panel">
 
       <!-- Live TV tabs -->
       <div class="mnp-section-label">
@@ -1574,21 +1590,6 @@
           src="" data-src="https://www.bloomberg.com/live"
           allow="autoplay; fullscreen"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-      </div>
-
-      <!-- Indian headlines -->
-      <div class="mnp-section-label" style="margin-top:16px">
-        <span>🇮🇳 Indian Market News</span>
-        <span id="mnp-refresh-ts" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)"></span>
-      </div>
-      <div class="mnp-tabs">
-        <div class="mnp-tab active" onclick="mnpSwitchTab('et',this)">ET Markets</div>
-        <div class="mnp-tab"        onclick="mnpSwitchTab('mint',this)">LiveMint</div>
-        <div class="mnp-tab"        onclick="mnpSwitchTab('bs',this)">Business Std</div>
-        <div class="mnp-tab"        onclick="mnpSwitchTab('hindu',this)">Hindu BizLine</div>
-      </div>
-      <div class="mnp-headlines" id="mnp-headlines">
-        <div class="mnp-headline-loading">Fetching headlines…</div>
       </div>
 
     </div>
@@ -1624,6 +1625,22 @@
           <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--green)">GREED</span>
         </div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted);text-align:center;margin-top:4px" id="mmiUpdated"></div>
+      </div>
+    </div>
+
+    <div class="panel-block news-panel-right">
+      <div class="mnp-section-label" style="margin-bottom:8px">
+        <span>🇮🇳 Indian Market News</span>
+        <span id="mnp-refresh-ts" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)"></span>
+      </div>
+      <div class="mnp-tabs">
+        <div class="mnp-tab active" onclick="mnpSwitchTab('et',this)">ET Markets</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('mint',this)">LiveMint</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('bs',this)">Business Std</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('hindu',this)">Hindu BizLine</div>
+      </div>
+      <div class="mnp-headlines" id="mnp-headlines">
+        <div class="mnp-headline-loading">Fetching headlines…</div>
       </div>
     </div>
 
