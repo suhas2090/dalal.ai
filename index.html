@@ -957,6 +957,219 @@
   .key-modal-link { font-size: 10px; color: var(--muted); margin-top: 10px; text-align: center; }
   .key-modal-link a { color: var(--saffron); text-decoration: none; }
 
+  /* ── D.AI BUTTON ── */
+  .dai-btn {
+    background: linear-gradient(135deg, #FF1744, #c0001e);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 0 10px rgba(255,23,68,0.35);
+    transition: box-shadow 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .dai-btn:hover { box-shadow: 0 0 18px rgba(255,23,68,0.6); transform: scale(1.04); }
+
+  /* ── D.AI POPUP OVERLAY ── */
+  .dai-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 9998;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .dai-overlay.open { display: flex; }
+  .dai-popup {
+    width: min(820px, 95vw);
+    height: min(88vh, 720px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    overflow: hidden;
+    position: relative;
+  }
+  .dai-popup-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,23,68,0.06);
+    flex-shrink: 0;
+  }
+  .dai-popup-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 900;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .dai-popup-title span { color: var(--red); }
+  .dai-popup-sub { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+  .dai-close-btn {
+    background: var(--border); border: none; border-radius: 6px;
+    color: var(--text); font-size: 16px; width: 32px; height: 32px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .dai-close-btn:hover { background: var(--red); }
+  .dai-chat-area {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .dai-input-zone {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 10px; flex-shrink: 0;
+    background: var(--panel);
+  }
+  .dai-input {
+    flex: 1; background: var(--ink); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 14px; color: var(--text);
+    font-size: 13px; font-family: 'Noto Sans', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .dai-input:focus { border-color: var(--red); }
+  .dai-send-btn {
+    background: var(--red); color: #fff; border: none;
+    border-radius: 8px; padding: 11px 18px; font-size: 13px;
+    font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+  }
+  .dai-send-btn:hover { opacity: 0.85; }
+  .dai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .dai-msg { display: flex; gap: 10px; align-items: flex-start; }
+  .dai-msg.user { flex-direction: row-reverse; }
+  .dai-bubble {
+    max-width: 80%; padding: 10px 14px; border-radius: 10px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .dai-msg.user .dai-bubble { background: rgba(255,23,68,0.12); border: 1px solid rgba(255,23,68,0.25); color: var(--text); }
+  .dai-msg.ai .dai-bubble { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+  .dai-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 2px;
+  }
+  .dai-msg.ai .dai-avatar { background: rgba(255,23,68,0.15); border: 1px solid rgba(255,23,68,0.3); }
+  .dai-msg.user .dai-avatar { background: var(--border); }
+  .dai-welcome {
+    text-align: center; padding: 30px 20px;
+    color: var(--muted); font-size: 13px; line-height: 1.8;
+  }
+  .dai-welcome-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
+  .dai-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+  .dai-chip {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 11px;
+    color: var(--text); cursor: pointer; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .dai-chip:hover { border-color: var(--red); color: var(--red); }
+  .dai-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .dai-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: dotbounce 1.2s infinite; }
+  .dai-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .dai-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotbounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+  /* ── NEWS LIVE PANEL (replaces right sidebar news) ── */
+  .news-live-panel {
+    border-bottom: 1px solid var(--border);
+  }
+  .news-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: #0a0a0f;
+    overflow-x: auto;
+  }
+  .news-tab {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 1px; padding: 7px 10px; cursor: pointer;
+    color: var(--muted); white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s; text-transform: uppercase;
+  }
+  .news-tab:hover { color: var(--text); }
+  .news-tab.active { color: var(--saffron); border-bottom-color: var(--saffron); }
+  .news-stream-wrap { position: relative; }
+  .news-stream-iframe {
+    width: 100%; height: 220px; border: none; display: none;
+    background: #000;
+  }
+  .news-stream-iframe.active { display: block; }
+  .news-live-badge {
+    position: absolute; top: 6px; right: 8px;
+    background: var(--red); color: #fff;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    padding: 2px 6px; border-radius: 3px; letter-spacing: 1px;
+    pointer-events: none; z-index: 10;
+  }
+  .news-live-badge::before { content: '● '; animation: blink 1s infinite; }
+
+  /* ── INDEX CHART PANEL ── */
+  .chart-panel {
+    background: var(--ink);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .chart-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 0;
+  }
+  .chart-index-tabs { display: flex; gap: 2px; }
+  .ci-tab {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    padding: 4px 9px; border-radius: 4px; cursor: pointer;
+    color: var(--muted); background: transparent; border: 1px solid transparent;
+    transition: all 0.15s; text-transform: uppercase;
+  }
+  .ci-tab:hover { color: var(--text); border-color: var(--border); }
+  .ci-tab.active { background: var(--saffron-dim); border-color: var(--saffron); color: var(--saffron); }
+  .chart-tf-tabs { display: flex; gap: 2px; }
+  .tf-tab {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    padding: 3px 7px; border-radius: 3px; cursor: pointer;
+    color: var(--muted); border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .tf-tab:hover { color: var(--text); }
+  .tf-tab.active { border-color: var(--border); color: var(--text); background: var(--border); }
+  .chart-widget-wrap { height: 220px; width: 100%; }
+  .chart-widget-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+
+  /* ── MARKET MOOD INDEX ── */
+  .mmi-block { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .mmi-gauge-wrap { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .mmi-arc {
+    position: relative; width: 72px; height: 40px; flex-shrink: 0;
+  }
+  .mmi-arc svg { width: 72px; height: 40px; overflow: visible; }
+  .mmi-score-label {
+    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
+    line-height: 1;
+  }
+  .mmi-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
+  .mmi-sentiment {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 3px; margin-top: 4px; display: inline-block;
+  }
+  .mmi-bar-wrap { flex: 1; }
+  .mmi-bar-bg { height: 8px; background: linear-gradient(90deg, #FF1744 0%, #FFD700 45%, #00C853 100%); border-radius: 4px; position: relative; }
+  .mmi-pointer {
+    position: absolute; top: -4px; width: 16px; height: 16px;
+    border-radius: 50%; border: 2px solid #fff;
+    transform: translateX(-50%);
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
+    transition: left 0.5s ease;
+  }
+
 </style>
 </head>
 <body>
@@ -980,6 +1193,39 @@
 </div>
 
 
+<!-- ── D.AI AGENT POPUP ── -->
+<div class="dai-overlay" id="daiOverlay">
+  <div class="dai-popup">
+    <div class="dai-popup-header">
+      <div>
+        <div class="dai-popup-title">D<span>.AI</span> — Intelligence Agent</div>
+        <div class="dai-popup-sub">NSE/BSE Research · Live Prices · Macro Analysis · Concall Digest</div>
+      </div>
+      <button class="dai-close-btn" onclick="closeDAI()" title="Close">✕</button>
+    </div>
+    <div class="dai-chat-area" id="daiChatArea">
+      <div class="dai-welcome" id="daiWelcome">
+        <div class="dai-welcome-title">Your Indian Market Intelligence Agent</div>
+        <div>Ask anything about NSE/BSE stocks, sectors, macroeconomics, or concall analysis. I synthesize live prices with AI-powered research.</div>
+        <div class="dai-chips">
+          <span class="dai-chip" onclick="daiAsk('TCS comprehensive research')">TCS research</span>
+          <span class="dai-chip" onclick="daiAsk('Reliance Industries deep dive')">Reliance deep dive</span>
+          <span class="dai-chip" onclick="daiAsk('How will US tariffs affect Indian IT stocks?')">US tariffs impact</span>
+          <span class="dai-chip" onclick="daiAsk('Infosys vs TCS vs Wipro comparison')">IT sector battle</span>
+          <span class="dai-chip" onclick="daiAsk('Best midcap stocks India 2025')">Midcap screener</span>
+          <span class="dai-chip" onclick="daiAsk('HDFC Bank fundamental analysis')">HDFC Bank</span>
+          <span class="dai-chip" onclick="daiAsk('RBI rate cut impact on banking sector')">RBI rate cut</span>
+          <span class="dai-chip" onclick="daiAsk('Crude oil impact on Indian markets')">Crude oil impact</span>
+        </div>
+      </div>
+    </div>
+    <div class="dai-input-zone">
+      <input class="dai-input" id="daiInput" placeholder="Ask about any NSE/BSE stock, sector, or macro event…" onkeydown="if(event.key==='Enter')daiSend()" />
+      <button class="dai-send-btn" id="daiSendBtn" onclick="daiSend()">ASK</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo">DALAL<span>.AI</span></div>
   <div class="ticker-bar">
@@ -990,6 +1236,7 @@
   <div class="header-right">
     <div class="data-pill live">NSE LIVE</div>
     <div class="data-pill" id="istTime">IST --:--</div>
+    <button class="dai-btn" onclick="openDAI()">D.AI</button>
     <div class="data-pill">Powered by Gemini</div>
   </div>
 </header>
@@ -1014,6 +1261,22 @@
         <div class="index-name">BANK NIFTY</div>
         <div class="index-val" id="banknifty-val">—</div>
         <div class="index-chg" id="banknifty-chg">loading…</div>
+      </div>
+      <div style="margin-top:6px;margin-bottom:2px" class="sidebar-label">Global</div>
+      <div class="index-card">
+        <div class="index-name">DOW JONES</div>
+        <div class="index-val" id="dji-val">—</div>
+        <div class="index-chg" id="dji-chg">loading…</div>
+      </div>
+      <div class="index-card">
+        <div class="index-name">NASDAQ</div>
+        <div class="index-val" id="nasdaq-val">—</div>
+        <div class="index-chg" id="nasdaq-chg">loading…</div>
+      </div>
+      <div class="index-card">
+        <div class="index-name">SGX NIFTY</div>
+        <div class="index-val" id="sgxnifty-val">—</div>
+        <div class="index-chg" id="sgxnifty-chg">loading…</div>
       </div>
     </div>
 
@@ -1098,6 +1361,28 @@
 
   <!-- MAIN CONTENT -->
   <div class="main-content">
+
+    <!-- INDEX CHART PANEL -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-index-tabs">
+          <div class="ci-tab active" onclick="switchChart('NIFTY50','NSE:NIFTY',this)">NIFTY 50</div>
+          <div class="ci-tab" onclick="switchChart('MIDCAP','NSE:NIFTYMIDCAP100',this)">MIDCAP</div>
+          <div class="ci-tab" onclick="switchChart('SMALLCAP','NSE:NIFTYSMALLCAP100',this)">SMALLCAP</div>
+          <div class="ci-tab" onclick="switchChart('SENSEX','BSE:SENSEX',this)">SENSEX</div>
+        </div>
+        <div class="chart-tf-tabs">
+          <div class="tf-tab" onclick="setChartTF('1W',this)">1W</div>
+          <div class="tf-tab active" onclick="setChartTF('1M',this)">1M</div>
+          <div class="tf-tab" onclick="setChartTF('6M',this)">6M</div>
+          <div class="tf-tab" onclick="setChartTF('1Y',this)">1Y</div>
+          <div class="tf-tab" onclick="setChartTF('2Y',this)">2Y</div>
+          <div class="tf-tab" onclick="setChartTF('5Y',this)">5Y</div>
+        </div>
+      </div>
+      <div class="chart-widget-wrap" id="chartWidgetWrap"></div>
+    </div>
+
     <div class="search-zone">
       <div class="search-wrapper">
         <span class="search-icon">◈</span>
@@ -1179,6 +1464,51 @@
 
   <!-- RIGHT SIDEBAR -->
   <div class="sidebar-right">
+
+    <!-- MMI BLOCK -->
+    <div class="mmi-block">
+      <div class="pb-label">Market Mood Index <span style="font-size:8px;color:var(--muted);float:right;font-family:monospace">Tickertape</span></div>
+      <div class="mmi-gauge-wrap">
+        <div class="mmi-arc">
+          <svg viewBox="0 0 72 40">
+            <path d="M6,36 A30,30 0 0,1 66,36" fill="none" stroke="#1E1E32" stroke-width="7" stroke-linecap="round"/>
+            <path id="mmiArcFill" d="M6,36 A30,30 0 0,1 66,36" fill="none" stroke="#FFD700" stroke-width="7" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="37.7"/>
+          </svg>
+        </div>
+        <div>
+          <div class="mmi-score-label" id="mmiScore" style="color:#FFD700">6<span style="font-size:13px;color:var(--muted)">/10</span></div>
+          <div class="mmi-label">MARKET MOOD</div>
+          <div class="mmi-sentiment" id="mmiSentiment" style="background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.3)">NEUTRAL</div>
+        </div>
+        <div class="mmi-bar-wrap">
+          <div class="mmi-bar-bg">
+            <div class="mmi-pointer" id="mmiPointer" style="left:60%;background:#FFD700"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted)">
+            <span>FEAR</span><span>GREED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE NEWS PANEL -->
+    <div class="news-live-panel">
+      <div class="pb-label" style="padding:10px 16px 0">Live News Feed</div>
+      <div class="news-tabs">
+        <div class="news-tab active" onclick="switchNews('wion',this)">WION</div>
+        <div class="news-tab" onclick="switchNews('bloomberg',this)">BLOOMBERG</div>
+      </div>
+      <div class="news-stream-wrap">
+        <div class="news-live-badge">LIVE</div>
+        <iframe class="news-stream-iframe active" id="news-wion"
+          src="https://www.wionews.com/live-tv"
+          allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+        <iframe class="news-stream-iframe" id="news-bloomberg"
+          src="https://www.bloomberg.com/live"
+          allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+    </div>
+
     <div class="panel-block">
       <div class="pb-label">Market News <span id="news-refresh-time" style="font-size:8px;color:var(--muted);float:right;font-family:monospace"></span></div>
       <div id="news-container">
@@ -1375,6 +1705,9 @@ const SYMBOLS = {
     '^NSEI':        'NIFTY',
     '^BSESN':       'SENSEX',
     'NIFTYBANK.NS': 'BANKNIFTY',
+    '^DJI':         'DJI',
+    '^IXIC':        'NASDAQ',
+    'SGX.NS':       'SGXNIFTY',
   },
   macro: {
     'USDINR=X': 'USDINR',
@@ -1443,6 +1776,9 @@ function applyToUI(raw, type) {
       ['^NSEI',        'nifty-val',     'nifty-chg'    ],
       ['^BSESN',       'sensex-val',    'sensex-chg'   ],
       ['NIFTYBANK.NS', 'banknifty-val', 'banknifty-chg'],
+      ['^DJI',         'dji-val',       'dji-chg'      ],
+      ['^IXIC',        'nasdaq-val',    'nasdaq-chg'   ],
+      ['SGX.NS',       'sgxnifty-val',  'sgxnifty-chg' ],
     ];
     for (const [sym, vid, cid] of map) {
       const p = fmt(raw[sym]); if (!p) continue;
@@ -2421,6 +2757,174 @@ function resetGeminiKey() {
   localStorage.removeItem('dalal_gemini_key');
   document.getElementById('keyModal').style.display = 'flex';
 }
+
+// ── D.AI POPUP ──
+function openDAI() {
+  document.getElementById('daiOverlay').classList.add('open');
+  document.getElementById('daiInput').focus();
+}
+function closeDAI() {
+  document.getElementById('daiOverlay').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('daiOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDAI();
+});
+
+let daiMessages = [];
+
+function daiAsk(text) {
+  document.getElementById('daiInput').value = text;
+  daiSend();
+}
+
+async function daiSend() {
+  const input = document.getElementById('daiInput');
+  const query = input.value.trim();
+  if (!query) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('daiWelcome');
+  if (welcome) welcome.style.display = 'none';
+
+  input.value = '';
+  const btn = document.getElementById('daiSendBtn');
+  btn.disabled = true;
+
+  // Add user message
+  daiAddMsg('user', query);
+  daiMessages.push({ role: 'user', content: query });
+
+  // Add typing indicator
+  const typingId = 'typing_' + Date.now();
+  const chatArea = document.getElementById('daiChatArea');
+  const typingEl = document.createElement('div');
+  typingEl.className = 'dai-msg ai';
+  typingEl.id = typingId;
+  typingEl.innerHTML = `<div class="dai-avatar">◈</div><div class="dai-bubble"><div class="dai-typing"><span></span><span></span><span></span></div></div>`;
+  chatArea.appendChild(typingEl);
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  // Fetch live price context
+  const sym = extractSymbol(query);
+  let liveCtx = '';
+  if (sym) {
+    try {
+      const fresh = await workerFetch([sym + '.NS']);
+      const raw = fresh[sym + '.NS'];
+      if (raw) {
+        const p = fmt(raw);
+        liveCtx = `\nLIVE NSE PRICE: ${sym} = ₹${p.priceStr} (${p.chgStr}) as of ${new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})} IST`;
+      }
+    } catch(e) {}
+  }
+
+  try {
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+    const sysPrompt = `You are DALAL.AI, an expert Indian stock market analyst. Answer the user's question with specific Indian market data, company financials, and actionable insights. Use ₹ for prices. Be concise but insightful. Format your response in clean HTML using <b> for emphasis, <br> for line breaks, and use bullet points with • character. No markdown.${liveCtx}`;
+
+    const body = {
+      contents: [{ parts: [{ text: sysPrompt + '\n\nUser: ' + query }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
+    };
+
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+    document.getElementById(typingId)?.remove();
+    daiAddMsg('ai', reply);
+    daiMessages.push({ role: 'assistant', content: reply });
+
+  } catch(err) {
+    document.getElementById(typingId)?.remove();
+    daiAddMsg('ai', '❌ Error: ' + (err.message.includes('429') ? 'Rate limit hit. Please wait a minute.' : err.message));
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+
+function daiAddMsg(role, text) {
+  const chatArea = document.getElementById('daiChatArea');
+  const div = document.createElement('div');
+  div.className = `dai-msg ${role}`;
+  const avatar = role === 'ai' ? '◈' : '👤';
+  div.innerHTML = `<div class="dai-avatar">${avatar}</div><div class="dai-bubble">${text}</div>`;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// ── LIVE NEWS TAB SWITCH ──
+function switchNews(channel, tabEl) {
+  document.querySelectorAll('.news-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.news-stream-iframe').forEach(f => f.classList.remove('active'));
+  tabEl.classList.add('active');
+  const el = document.getElementById('news-' + channel);
+  if (el) el.classList.add('active');
+}
+
+// ── INDEX CHART ──
+let currentChartSymbol = 'NSE:NIFTY';
+let currentChartTF = '1M';
+
+const TF_MAP = { '1W':'1W', '1M':'1M', '6M':'6M', '1Y':'12M', '2Y':'24M', '5Y':'60M' };
+
+function buildChartURL(symbol, tf) {
+  const range = TF_MAP[tf] || '1M';
+  return `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(symbol)}&interval=D&range=${range}&theme=dark&style=3&locale=en&toolbar_bg=%230f0f1a&enable_publishing=false&hide_top_toolbar=1&hide_legend=0&save_image=false&backgroundColor=rgba(15,15,26,1)&gridColor=rgba(30,30,50,0.5)&hide_volume=1`;
+}
+
+function renderChart() {
+  const wrap = document.getElementById('chartWidgetWrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<iframe src="${buildChartURL(currentChartSymbol, currentChartTF)}" frameborder="0" allowtransparency="true" scrolling="no" allowfullscreen></iframe>`;
+}
+
+function switchChart(name, symbol, tabEl) {
+  document.querySelectorAll('.ci-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  currentChartSymbol = symbol;
+  renderChart();
+}
+
+function setChartTF(tf, tabEl) {
+  document.querySelectorAll('.tf-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  currentChartTF = tf;
+  renderChart();
+}
+
+// ── MARKET MOOD INDEX (static 6/10) ──
+function renderMMI() {
+  const score = 6;
+  const pct = score / 10;
+  // Arc: full arc dasharray = PI*30 ≈ 94.25, dashoffset = arc*(1-pct)
+  const arcLen = 94.25;
+  const offset = arcLen * (1 - pct);
+  const color = score <= 3 ? 'var(--red)' : score <= 5 ? '#FF6B00' : score <= 7 ? '#FFD700' : 'var(--green)';
+  const label = score <= 3 ? 'FEAR' : score <= 5 ? 'CAUTION' : score <= 7 ? 'NEUTRAL' : 'GREED';
+
+  const arc = document.getElementById('mmiArcFill');
+  if (arc) { arc.style.stroke = color; arc.setAttribute('stroke-dashoffset', offset); }
+
+  const scoreEl = document.getElementById('mmiScore');
+  if (scoreEl) { scoreEl.style.color = color; scoreEl.innerHTML = score + '<span style="font-size:13px;color:var(--muted)">/10</span>'; }
+
+  const sent = document.getElementById('mmiSentiment');
+  if (sent) { sent.textContent = label; sent.style.color = color; sent.style.background = color.includes('FFD700') ? 'rgba(255,215,0,0.12)' : 'rgba(255,107,0,0.1)'; sent.style.border = `1px solid ${color}40`; }
+
+  const ptr = document.getElementById('mmiPointer');
+  if (ptr) { ptr.style.left = (pct * 100) + '%'; ptr.style.background = color; }
+}
+
+// Init on load
+renderChart();
+renderMMI();
 
 // Check key on load — if present skip modal, else show it
 const keyReady = loadGeminiKey();
