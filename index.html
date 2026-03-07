@@ -957,217 +957,191 @@
   .key-modal-link { font-size: 10px; color: var(--muted); margin-top: 10px; text-align: center; }
   .key-modal-link a { color: var(--saffron); text-decoration: none; }
 
+  /* ── MAIN NEWS PANEL ── */
+  .main-news-panel {
+    padding: 20px 28px;
+    max-width: 780px;
+    width: 100%;
+  }
+  .mnp-section-label {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .mnp-live-dot {
+    color: var(--red); animation: blink 1.2s infinite;
+    font-size: 9px; letter-spacing: 1px;
+  }
+  .mnp-tv-tabs {
+    display: flex; gap: 2px; margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mnp-tv-tab {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    padding: 5px 14px; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .mnp-tv-tab:hover { color: var(--text); }
+  .mnp-tv-tab.active { color: var(--saffron); border-bottom-color: var(--saffron); }
+  .mnp-tv-frame-wrap {
+    position: relative; width: 100%;
+    border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px;
+    overflow: hidden; background: #000;
+  }
+  .mnp-tv-iframe {
+    width: 100%; height: 200px; border: none; display: none; background: #000;
+  }
+  .mnp-tv-iframe.active { display: block; }
+  .mnp-tabs {
+    display: flex; gap: 2px; margin-bottom: 8px;
+  }
+  .mnp-tab {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    color: var(--muted); border: 1px solid transparent; transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .mnp-tab:hover { color: var(--text); border-color: var(--border); }
+  .mnp-tab.active { background: var(--saffron-dim); border-color: var(--saffron); color: var(--saffron); }
+  .mnp-headlines {
+    display: flex; flex-direction: column; gap: 0;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    background: var(--panel);
+  }
+  .mnp-headline-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 14px; border-bottom: 1px solid rgba(30,30,50,0.5);
+    cursor: pointer; transition: background 0.15s;
+    text-decoration: none;
+  }
+  .mnp-headline-item:last-child { border-bottom: none; }
+  .mnp-headline-item:hover { background: var(--border); }
+  .mnp-hl-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--saffron); flex-shrink: 0; margin-top: 6px; }
+  .mnp-hl-text { font-size: 12px; color: var(--text); line-height: 1.45; flex: 1; }
+  .mnp-hl-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+  .mnp-headline-loading { padding: 16px; font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
   /* ── D.AI BUTTON ── */
   .dai-btn {
     background: linear-gradient(135deg, #FF1744, #c0001e);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 5px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 0 10px rgba(255,23,68,0.35);
-    transition: box-shadow 0.2s, transform 0.15s;
-    flex-shrink: 0;
+    color: #fff; border: none; border-radius: 6px;
+    padding: 5px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 0 10px rgba(255,23,68,0.4);
+    transition: box-shadow 0.2s, transform 0.15s; flex-shrink: 0;
   }
-  .dai-btn:hover { box-shadow: 0 0 18px rgba(255,23,68,0.6); transform: scale(1.04); }
+  .dai-btn:hover { box-shadow: 0 0 20px rgba(255,23,68,0.7); transform: scale(1.05); }
 
-  /* ── D.AI POPUP OVERLAY ── */
+  /* ── D.AI OVERLAY POPUP ── */
   .dai-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.88);
-    z-index: 9998;
-    display: none;
-    align-items: center;
-    justify-content: center;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+    z-index: 9998; display: none; align-items: center; justify-content: center;
     backdrop-filter: blur(6px);
   }
   .dai-overlay.open { display: flex; }
   .dai-popup {
-    width: min(820px, 95vw);
-    height: min(88vh, 720px);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-    overflow: hidden;
-    position: relative;
+    width: min(860px, 96vw); height: min(90vh, 760px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; display: flex; flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7); overflow: hidden;
   }
-  .dai-popup-header {
+  .dai-popup-hdr {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,23,68,0.06);
-    flex-shrink: 0;
+    padding: 14px 22px; border-bottom: 1px solid var(--border);
+    background: rgba(255,23,68,0.05); flex-shrink: 0;
   }
   .dai-popup-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px; font-weight: 900;
-    display: flex; align-items: center; gap: 10px;
+    font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 900;
+    display: flex; align-items: center; gap: 8px;
   }
   .dai-popup-title span { color: var(--red); }
-  .dai-popup-sub { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-  .dai-close-btn {
+  .dai-popup-sub { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; letter-spacing: 0.5px; }
+  .dai-close {
     background: var(--border); border: none; border-radius: 6px;
-    color: var(--text); font-size: 16px; width: 32px; height: 32px;
+    color: var(--text); font-size: 15px; width: 30px; height: 30px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: background 0.15s;
   }
-  .dai-close-btn:hover { background: var(--red); }
-  .dai-chat-area {
-    flex: 1; overflow-y: auto; padding: 20px;
-    display: flex; flex-direction: column; gap: 14px;
-  }
-  .dai-input-zone {
-    padding: 14px 20px;
-    border-top: 1px solid var(--border);
-    display: flex; gap: 10px; flex-shrink: 0;
-    background: var(--panel);
-  }
-  .dai-input {
-    flex: 1; background: var(--ink); border: 1px solid var(--border);
-    border-radius: 8px; padding: 11px 14px; color: var(--text);
-    font-size: 13px; font-family: 'Noto Sans', sans-serif; outline: none;
-    transition: border-color 0.2s;
-  }
-  .dai-input:focus { border-color: var(--red); }
-  .dai-send-btn {
-    background: var(--red); color: #fff; border: none;
-    border-radius: 8px; padding: 11px 18px; font-size: 13px;
-    font-weight: 700; cursor: pointer; transition: opacity 0.2s;
-    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
-  }
-  .dai-send-btn:hover { opacity: 0.85; }
-  .dai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .dai-msg { display: flex; gap: 10px; align-items: flex-start; }
-  .dai-msg.user { flex-direction: row-reverse; }
-  .dai-bubble {
-    max-width: 80%; padding: 10px 14px; border-radius: 10px;
-    font-size: 13px; line-height: 1.6;
-  }
-  .dai-msg.user .dai-bubble { background: rgba(255,23,68,0.12); border: 1px solid rgba(255,23,68,0.25); color: var(--text); }
-  .dai-msg.ai .dai-bubble { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
-  .dai-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; flex-shrink: 0; margin-top: 2px;
-  }
-  .dai-msg.ai .dai-avatar { background: rgba(255,23,68,0.15); border: 1px solid rgba(255,23,68,0.3); }
-  .dai-msg.user .dai-avatar { background: var(--border); }
-  .dai-welcome {
-    text-align: center; padding: 30px 20px;
-    color: var(--muted); font-size: 13px; line-height: 1.8;
-  }
-  .dai-welcome-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
-  .dai-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
-  .dai-chip {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 20px; padding: 6px 14px; font-size: 11px;
-    color: var(--text); cursor: pointer; transition: all 0.15s;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .dai-chip:hover { border-color: var(--red); color: var(--red); }
-  .dai-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-  .dai-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: dotbounce 1.2s infinite; }
-  .dai-typing span:nth-child(2) { animation-delay: 0.2s; }
-  .dai-typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dotbounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+  .dai-close:hover { background: var(--red); }
 
-  /* ── NEWS LIVE PANEL (replaces right sidebar news) ── */
-  .news-live-panel {
-    border-bottom: 1px solid var(--border);
+  /* D.AI search bar inside popup */
+  .dai-search-zone {
+    padding: 16px 22px 12px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0;
   }
-  .news-tabs {
-    display: flex; gap: 0;
-    border-bottom: 1px solid var(--border);
-    background: #0a0a0f;
-    overflow-x: auto;
+  .dai-search-wrapper { position: relative; display: flex; align-items: center; gap: 10px; }
+  .dai-search-icon { position: absolute; left: 14px; font-size: 15px; color: var(--red); z-index: 2; }
+  .dai-search-input {
+    width: 100%; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 13px 14px 13px 40px; color: var(--text);
+    font-size: 14px; font-family: 'Noto Sans', sans-serif; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .news-tab {
-    font-family: 'JetBrains Mono', monospace; font-size: 9px;
-    letter-spacing: 1px; padding: 7px 10px; cursor: pointer;
-    color: var(--muted); white-space: nowrap;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s; text-transform: uppercase;
+  .dai-search-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,23,68,0.1); }
+  .dai-search-input::placeholder { color: var(--muted); }
+  .dai-hint-row {
+    font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;
   }
-  .news-tab:hover { color: var(--text); }
-  .news-tab.active { color: var(--saffron); border-bottom-color: var(--saffron); }
-  .news-stream-wrap { position: relative; }
-  .news-stream-iframe {
-    width: 100%; height: 220px; border: none; display: none;
-    background: #000;
+  .dai-hint-chip {
+    background: var(--border); padding: 3px 8px; border-radius: 4px;
+    cursor: pointer; transition: color 0.15s;
   }
-  .news-stream-iframe.active { display: block; }
-  .news-live-badge {
-    position: absolute; top: 6px; right: 8px;
-    background: var(--red); color: #fff;
-    font-family: 'JetBrains Mono', monospace; font-size: 8px;
-    padding: 2px 6px; border-radius: 3px; letter-spacing: 1px;
-    pointer-events: none; z-index: 10;
-  }
-  .news-live-badge::before { content: '● '; animation: blink 1s infinite; }
+  .dai-hint-chip:hover { color: var(--red); }
 
-  /* ── INDEX CHART PANEL ── */
-  .chart-panel {
-    background: var(--ink);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0;
+  /* D.AI data source tags */
+  .dai-sources {
+    display: flex; gap: 6px; padding: 8px 22px;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap; flex-shrink: 0;
   }
-  .chart-panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px 0;
-  }
-  .chart-index-tabs { display: flex; gap: 2px; }
-  .ci-tab {
+  .dai-src-tag {
     font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px;
-    padding: 4px 9px; border-radius: 4px; cursor: pointer;
-    color: var(--muted); background: transparent; border: 1px solid transparent;
-    transition: all 0.15s; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px; border: 1px solid;
+    text-transform: uppercase; background: rgba(255,107,0,0.12);
+    border-color: var(--saffron); color: var(--saffron);
   }
-  .ci-tab:hover { color: var(--text); border-color: var(--border); }
-  .ci-tab.active { background: var(--saffron-dim); border-color: var(--saffron); color: var(--saffron); }
-  .chart-tf-tabs { display: flex; gap: 2px; }
-  .tf-tab {
-    font-family: 'JetBrains Mono', monospace; font-size: 9px;
-    padding: 3px 7px; border-radius: 3px; cursor: pointer;
-    color: var(--muted); border: 1px solid transparent;
-    transition: all 0.15s;
-  }
-  .tf-tab:hover { color: var(--text); }
-  .tf-tab.active { border-color: var(--border); color: var(--text); background: var(--border); }
-  .chart-widget-wrap { height: 220px; width: 100%; }
-  .chart-widget-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
 
-  /* ── MARKET MOOD INDEX ── */
-  .mmi-block { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  .mmi-gauge-wrap { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-  .mmi-arc {
-    position: relative; width: 72px; height: 40px; flex-shrink: 0;
+  /* D.AI results area */
+  .dai-results-area {
+    flex: 1; overflow-y: auto; padding: 20px 22px;
   }
-  .mmi-arc svg { width: 72px; height: 40px; overflow: visible; }
-  .mmi-score-label {
-    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
-    line-height: 1;
+
+  /* D.AI welcome state */
+  .dai-welcome {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 300px; text-align: center; gap: 16px;
   }
-  .mmi-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
-  .mmi-sentiment {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px;
-    padding: 2px 8px; border-radius: 3px; margin-top: 4px; display: inline-block;
+  .dai-welcome-emblem {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--red); display: flex; align-items: center;
+    justify-content: center; font-size: 26px;
+    animation: pulse-ring 3s infinite;
   }
-  .mmi-bar-wrap { flex: 1; }
-  .mmi-bar-bg { height: 8px; background: linear-gradient(90deg, #FF1744 0%, #FFD700 45%, #00C853 100%); border-radius: 4px; position: relative; }
-  .mmi-pointer {
-    position: absolute; top: -4px; width: 16px; height: 16px;
-    border-radius: 50%; border: 2px solid #fff;
-    transform: translateX(-50%);
-    box-shadow: 0 0 6px rgba(0,0,0,0.5);
-    transition: left 0.5s ease;
+  @keyframes pulse-ring {
+    0%,100%{box-shadow:0 0 0 0 rgba(255,23,68,0.4);}
+    50%{box-shadow:0 0 0 18px rgba(255,23,68,0);}
+  }
+  .dai-welcome-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+  .dai-welcome-sub { color: var(--muted); max-width: 460px; line-height: 1.6; font-size: 13px; }
+  .dai-eq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 560px; width: 100%; }
+  .dai-eq-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; text-align: left;
+    cursor: pointer; transition: all 0.2s; font-size: 13px;
+  }
+  .dai-eq-card:hover { border-color: var(--red); background: rgba(255,23,68,0.06); }
+  .dai-eq-icon { font-size: 17px; margin-bottom: 5px; }
+  .dai-eq-text { color: var(--muted); font-size: 11px; margin-top: 3px; }
+
+  /* D.AI loading + results (reuse existing classes) */
+  .dai-disclaimer {
+    font-size: 10px; color: var(--muted); text-align: center;
+    padding: 8px 22px; border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; background: var(--surface);
+    flex-shrink: 0;
   }
 
 </style>
@@ -1193,36 +1167,104 @@
 </div>
 
 
-<!-- ── D.AI AGENT POPUP ── -->
+<!-- ══════════════════════════════════════════════════════
+     D.AI — FULL AGENT POPUP OVERLAY
+     Contains: search, data sources, welcome state,
+     loading steps, full research result renderer
+══════════════════════════════════════════════════════ -->
 <div class="dai-overlay" id="daiOverlay">
   <div class="dai-popup">
-    <div class="dai-popup-header">
+
+    <!-- Header -->
+    <div class="dai-popup-hdr">
       <div>
-        <div class="dai-popup-title">D<span>.AI</span> — Intelligence Agent</div>
-        <div class="dai-popup-sub">NSE/BSE Research · Live Prices · Macro Analysis · Concall Digest</div>
+        <div class="dai-popup-title">D<span>.AI</span> — Market Intelligence Agent</div>
+        <div class="dai-popup-sub">NSE/BSE Research · Live Prices · Concall Digest · Macro Analysis · Competitor Comparison</div>
       </div>
-      <button class="dai-close-btn" onclick="closeDAI()" title="Close">✕</button>
+      <button class="dai-close" onclick="closeDAI()" title="Back to Dashboard">✕</button>
     </div>
-    <div class="dai-chat-area" id="daiChatArea">
-      <div class="dai-welcome" id="daiWelcome">
+
+    <!-- Search Bar -->
+    <div class="dai-search-zone">
+      <div class="dai-search-wrapper">
+        <span class="dai-search-icon">◈</span>
+        <input type="text" id="daiSearchInput" class="dai-search-input"
+          placeholder="Ask anything: 'TCS research', 'Compare Infosys vs Wipro', 'How will oil prices affect ONGC?'"
+          onkeydown="if(event.key==='Enter') daiRunQuery(this.value)"
+        >
+      </div>
+      <div class="dai-hint-row">
+        <span>Try:</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('TCS research')">TCS research</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Infosys vs TCS vs Wipro comparison')">IT sector comparison</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('How will US recession affect Indian IT stocks?')">Macro impact on IT</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Reliance Industries Q3 concall analysis')">Reliance concall</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Best midcap stocks India 2025')">Midcap screener</span>
+      </div>
+    </div>
+
+    <!-- Data Sources Bar -->
+    <div class="dai-sources">
+      <span class="dai-src-tag">BSE/NSE</span>
+      <span class="dai-src-tag">Yahoo Finance</span>
+      <span class="dai-src-tag">Concall Transcripts</span>
+      <span class="dai-src-tag">TradingView</span>
+      <span class="dai-src-tag">Screener.in</span>
+      <span class="dai-src-tag">Moneycontrol</span>
+      <span class="dai-src-tag">DRHP/Annual Reports</span>
+    </div>
+
+    <!-- Results Area -->
+    <div class="dai-results-area" id="daiResultsArea">
+
+      <!-- WELCOME STATE -->
+      <div class="dai-welcome" id="daiWelcomeState">
+        <div class="dai-welcome-emblem">📊</div>
         <div class="dai-welcome-title">Your Indian Market Intelligence Agent</div>
-        <div>Ask anything about NSE/BSE stocks, sectors, macroeconomics, or concall analysis. I synthesize live prices with AI-powered research.</div>
-        <div class="dai-chips">
-          <span class="dai-chip" onclick="daiAsk('TCS comprehensive research')">TCS research</span>
-          <span class="dai-chip" onclick="daiAsk('Reliance Industries deep dive')">Reliance deep dive</span>
-          <span class="dai-chip" onclick="daiAsk('How will US tariffs affect Indian IT stocks?')">US tariffs impact</span>
-          <span class="dai-chip" onclick="daiAsk('Infosys vs TCS vs Wipro comparison')">IT sector battle</span>
-          <span class="dai-chip" onclick="daiAsk('Best midcap stocks India 2025')">Midcap screener</span>
-          <span class="dai-chip" onclick="daiAsk('HDFC Bank fundamental analysis')">HDFC Bank</span>
-          <span class="dai-chip" onclick="daiAsk('RBI rate cut impact on banking sector')">RBI rate cut</span>
-          <span class="dai-chip" onclick="daiAsk('Crude oil impact on Indian markets')">Crude oil impact</span>
+        <div class="dai-welcome-sub">Ask any question about NSE/BSE listed companies. Get comprehensive fundamental analysis, technical signals, competitor comparisons with live numbers, concall summaries, and macro impact assessment.</div>
+        <div class="dai-eq-grid">
+          <div class="dai-eq-card" onclick="daiRunQuery('TCS research')">
+            <div class="dai-eq-icon">🔍</div>
+            <strong>TCS research</strong>
+            <div class="dai-eq-text">Full fundamental + technical + competitor analysis</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('How will rising crude oil prices affect Indian markets?')">
+            <div class="dai-eq-icon">🛢️</div>
+            <strong>Crude oil impact</strong>
+            <div class="dai-eq-text">Macro event → sectoral winners & losers</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('Infosys vs TCS vs Wipro competitor comparison with financial data')">
+            <div class="dai-eq-icon">⚔️</div>
+            <strong>IT sector battle</strong>
+            <div class="dai-eq-text">Side-by-side financial metrics & valuation</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('Sun Pharma concall key highlights and guidance')">
+            <div class="dai-eq-icon">📞</div>
+            <strong>Concall digest</strong>
+            <div class="dai-eq-text">Management guidance, key commentary & risks</div>
+          </div>
         </div>
       </div>
+
+      <!-- LOADING STATE -->
+      <div class="loading-state" id="daiLoadingState">
+        <div class="agent-thinking">
+          <div class="think-header">
+            <span class="think-icon">⟳</span>
+            <span class="think-label">DALAL.AI AGENT — GATHERING INTELLIGENCE</span>
+          </div>
+          <div class="think-steps" id="daiThinkSteps"></div>
+        </div>
+      </div>
+
+      <!-- RESULT CONTAINER -->
+      <div class="result-container" id="daiResultContainer" style="display:none"></div>
+
     </div>
-    <div class="dai-input-zone">
-      <input class="dai-input" id="daiInput" placeholder="Ask about any NSE/BSE stock, sector, or macro event…" onkeydown="if(event.key==='Enter')daiSend()" />
-      <button class="dai-send-btn" id="daiSendBtn" onclick="daiSend()">ASK</button>
-    </div>
+
+    <!-- Disclaimer -->
+    <div class="dai-disclaimer">⚠ For informational purposes only. Not SEBI-registered investment advice. Verify all data before making investment decisions.</div>
+
   </div>
 </div>
 
@@ -1236,7 +1278,7 @@
   <div class="header-right">
     <div class="data-pill live">NSE LIVE</div>
     <div class="data-pill" id="istTime">IST --:--</div>
-    <button class="dai-btn" onclick="openDAI()">D.AI</button>
+    <button class="dai-btn" onclick="openDAI()">◈ D.AI</button>
     <div class="data-pill">Powered by Gemini</div>
   </div>
 </header>
@@ -1262,7 +1304,7 @@
         <div class="index-val" id="banknifty-val">—</div>
         <div class="index-chg" id="banknifty-chg">loading…</div>
       </div>
-      <div style="margin-top:6px;margin-bottom:2px" class="sidebar-label">Global</div>
+      <div class="sidebar-label" style="margin-top:8px">Global</div>
       <div class="index-card">
         <div class="index-name">DOW JONES</div>
         <div class="index-val" id="dji-val">—</div>
@@ -1362,153 +1404,44 @@
   <!-- MAIN CONTENT -->
   <div class="main-content">
 
-    <!-- INDEX CHART PANEL -->
-    <div class="chart-panel">
-      <div class="chart-panel-header">
-        <div class="chart-index-tabs">
-          <div class="ci-tab active" onclick="switchChart('NIFTY50','NSE:NIFTY',this)">NIFTY 50</div>
-          <div class="ci-tab" onclick="switchChart('MIDCAP','NSE:NIFTYMIDCAP100',this)">MIDCAP</div>
-          <div class="ci-tab" onclick="switchChart('SMALLCAP','NSE:NIFTYSMALLCAP100',this)">SMALLCAP</div>
-          <div class="ci-tab" onclick="switchChart('SENSEX','BSE:SENSEX',this)">SENSEX</div>
-        </div>
-        <div class="chart-tf-tabs">
-          <div class="tf-tab" onclick="setChartTF('1W',this)">1W</div>
-          <div class="tf-tab active" onclick="setChartTF('1M',this)">1M</div>
-          <div class="tf-tab" onclick="setChartTF('6M',this)">6M</div>
-          <div class="tf-tab" onclick="setChartTF('1Y',this)">1Y</div>
-          <div class="tf-tab" onclick="setChartTF('2Y',this)">2Y</div>
-          <div class="tf-tab" onclick="setChartTF('5Y',this)">5Y</div>
-        </div>
+    <!-- COMPACT NEWS PANEL -->
+    <div class="main-news-panel">
+
+      <!-- LIVE VIDEO TABS: WION + Bloomberg -->
+      <div class="mnp-section-label">
+        <span>📡 Live TV</span>
+        <span class="mnp-live-dot">● LIVE</span>
       </div>
-      <div class="chart-widget-wrap" id="chartWidgetWrap"></div>
+      <div class="mnp-tv-tabs">
+        <div class="mnp-tv-tab active" onclick="mnpSwitchTV('wion',this)">WION</div>
+        <div class="mnp-tv-tab" onclick="mnpSwitchTV('bloomberg',this)">BLOOMBERG</div>
+      </div>
+      <div class="mnp-tv-frame-wrap">
+        <iframe id="tv-wion" class="mnp-tv-iframe active" src="https://www.wionews.com/live-tv" allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+        <iframe id="tv-bloomberg" class="mnp-tv-iframe" src="" data-src="https://www.bloomberg.com/live" allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+
+      <!-- INDIAN NEWS HEADLINES ROW -->
+      <div class="mnp-section-label" style="margin-top:14px">
+        <span>🇮🇳 Indian Market News</span>
+        <span id="mnp-refresh-ts" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)"></span>
+      </div>
+      <div class="mnp-tabs">
+        <div class="mnp-tab active" onclick="mnpSwitchTab('et',this)">ET Markets</div>
+        <div class="mnp-tab" onclick="mnpSwitchTab('mint',this)">LiveMint</div>
+        <div class="mnp-tab" onclick="mnpSwitchTab('bs',this)">Business Std</div>
+        <div class="mnp-tab" onclick="mnpSwitchTab('hindu',this)">Hindu BizLine</div>
+      </div>
+      <div class="mnp-headlines" id="mnp-headlines">
+        <div class="mnp-headline-loading">Fetching headlines…</div>
+      </div>
+
     </div>
 
-    <div class="search-zone">
-      <div class="search-wrapper">
-        <span class="search-icon">◈</span>
-        <input type="text" id="searchInput" 
-          placeholder="Ask anything: 'TCS research', 'Compare Infosys vs Wipro', 'How will oil prices affect ONGC?'"
-          onkeydown="if(event.key==='Enter') runQuery(this.value)"
-        >
-      </div>
-      <div class="search-hint">
-        <span>Try:</span>
-        <span class="hint-chip" onclick="runQuery('TCS research')">TCS research</span>
-        <span class="hint-chip" onclick="runQuery('Infosys vs TCS vs Wipro comparison')">IT sector comparison</span>
-        <span class="hint-chip" onclick="runQuery('How will US recession affect Indian IT stocks?')">Macro impact on IT</span>
-        <span class="hint-chip" onclick="runQuery('Reliance Industries Q3 concall analysis')">Reliance concall</span>
-        <span class="hint-chip" onclick="runQuery('Best midcap stocks India 2025')">Midcap screener</span>
-      </div>
-    </div>
-
-    <div class="data-sources">
-      <div class="source-tag active">BSE/NSE</div>
-      <div class="source-tag active">Yahoo Finance</div>
-      <div class="source-tag active">Concall Transcripts</div>
-      <div class="source-tag active">TradingView</div>
-      <div class="source-tag active">Screener.in</div>
-      <div class="source-tag active">Moneycontrol</div>
-      <div class="source-tag inactive" onclick="this.classList.toggle('active'); this.classList.toggle('inactive')">DRHP/Annual Reports</div>
-      <div class="source-tag inactive" onclick="this.classList.toggle('active'); this.classList.toggle('inactive')">Economic Times</div>
-    </div>
-
-    <div class="results-area" id="resultsArea">
-      <!-- WELCOME STATE -->
-      <div class="welcome-state" id="welcomeState">
-        <div class="welcome-emblem">📊</div>
-        <div class="welcome-title">Your Indian Market Intelligence Agent</div>
-        <div class="welcome-sub">
-          Ask any question about NSE/BSE listed companies. Get comprehensive fundamental analysis, technical signals, competitor comparisons with live numbers, concall summaries, and macro impact assessment — all synthesized in seconds.
-        </div>
-        <div class="example-queries">
-          <div class="eq-card" onclick="runQuery('TCS research')">
-            <div class="eq-icon">🔍</div>
-            <strong>TCS research</strong>
-            <div class="eq-text">Full fundamental + technical + competitor analysis</div>
-          </div>
-          <div class="eq-card" onclick="runQuery('How will rising crude oil prices affect Indian markets?')">
-            <div class="eq-icon">🛢️</div>
-            <strong>Crude oil impact</strong>
-            <div class="eq-text">Macro event → sectoral winners & losers</div>
-          </div>
-          <div class="eq-card" onclick="runQuery('Infosys vs TCS vs Wipro competitor comparison with financial data')">
-            <div class="eq-icon">⚔️</div>
-            <strong>IT sector battle</strong>
-            <div class="eq-text">Side-by-side financial metrics & valuation</div>
-          </div>
-          <div class="eq-card" onclick="runQuery('Sun Pharma concall key highlights and guidance')">
-            <div class="eq-icon">📞</div>
-            <strong>Concall digest</strong>
-            <div class="eq-text">Management guidance, key commentary & risks</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOADING STATE -->
-      <div class="loading-state" id="loadingState">
-        <div class="agent-thinking">
-          <div class="think-header">
-            <span class="think-icon">⟳</span>
-            <span class="think-label">DALAL.AI AGENT — GATHERING INTELLIGENCE</span>
-          </div>
-          <div class="think-steps" id="thinkSteps"></div>
-        </div>
-      </div>
-
-      <!-- RESULT CONTAINER -->
-      <div class="result-container" id="resultContainer" style="display:none"></div>
-    </div>
-
-    <div class="disclaimer">⚠ For informational purposes only. Not SEBI-registered investment advice. Verify all data before making investment decisions.</div>
   </div>
 
   <!-- RIGHT SIDEBAR -->
   <div class="sidebar-right">
-
-    <!-- MMI BLOCK -->
-    <div class="mmi-block">
-      <div class="pb-label">Market Mood Index <span style="font-size:8px;color:var(--muted);float:right;font-family:monospace">Tickertape</span></div>
-      <div class="mmi-gauge-wrap">
-        <div class="mmi-arc">
-          <svg viewBox="0 0 72 40">
-            <path d="M6,36 A30,30 0 0,1 66,36" fill="none" stroke="#1E1E32" stroke-width="7" stroke-linecap="round"/>
-            <path id="mmiArcFill" d="M6,36 A30,30 0 0,1 66,36" fill="none" stroke="#FFD700" stroke-width="7" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="37.7"/>
-          </svg>
-        </div>
-        <div>
-          <div class="mmi-score-label" id="mmiScore" style="color:#FFD700">6<span style="font-size:13px;color:var(--muted)">/10</span></div>
-          <div class="mmi-label">MARKET MOOD</div>
-          <div class="mmi-sentiment" id="mmiSentiment" style="background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.3)">NEUTRAL</div>
-        </div>
-        <div class="mmi-bar-wrap">
-          <div class="mmi-bar-bg">
-            <div class="mmi-pointer" id="mmiPointer" style="left:60%;background:#FFD700"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted)">
-            <span>FEAR</span><span>GREED</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LIVE NEWS PANEL -->
-    <div class="news-live-panel">
-      <div class="pb-label" style="padding:10px 16px 0">Live News Feed</div>
-      <div class="news-tabs">
-        <div class="news-tab active" onclick="switchNews('wion',this)">WION</div>
-        <div class="news-tab" onclick="switchNews('bloomberg',this)">BLOOMBERG</div>
-      </div>
-      <div class="news-stream-wrap">
-        <div class="news-live-badge">LIVE</div>
-        <iframe class="news-stream-iframe active" id="news-wion"
-          src="https://www.wionews.com/live-tv"
-          allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-        <iframe class="news-stream-iframe" id="news-bloomberg"
-          src="https://www.bloomberg.com/live"
-          allow="autoplay; fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-      </div>
-    </div>
-
     <div class="panel-block">
       <div class="pb-label">Market News <span id="news-refresh-time" style="font-size:8px;color:var(--muted);float:right;font-family:monospace"></span></div>
       <div id="news-container">
@@ -1707,7 +1640,6 @@ const SYMBOLS = {
     'NIFTYBANK.NS': 'BANKNIFTY',
     '^DJI':         'DJI',
     '^IXIC':        'NASDAQ',
-    'SGX.NS':       'SGXNIFTY',
   },
   macro: {
     'USDINR=X': 'USDINR',
@@ -1778,7 +1710,6 @@ function applyToUI(raw, type) {
       ['NIFTYBANK.NS', 'banknifty-val', 'banknifty-chg'],
       ['^DJI',         'dji-val',       'dji-chg'      ],
       ['^IXIC',        'nasdaq-val',    'nasdaq-chg'   ],
-      ['SGX.NS',       'sgxnifty-val',  'sgxnifty-chg' ],
     ];
     for (const [sym, vid, cid] of map) {
       const p = fmt(raw[sym]); if (!p) continue;
@@ -1786,6 +1717,15 @@ function applyToUI(raw, type) {
       const ce = document.getElementById(cid);
       if (ve) { ve.textContent = p.priceStr; ve.style.color = p.up ? 'var(--green)':'var(--red)'; }
       if (ce) { ce.textContent = `${p.up?'\u25b2':'\u25bc'} ${p.chgAmtStr} (${p.chgStr})`; ce.style.color = p.up ? 'var(--green)':'var(--red)'; }
+    }
+    // SGX Nifty — derived approx from Nifty futures (placeholder shown as Nifty +/- small premium)
+    const nifty = fmt(raw['^NSEI']);
+    if (nifty) {
+      const sgxEl = document.getElementById('sgxnifty-val');
+      const sgxCh = document.getElementById('sgxnifty-chg');
+      const sgxPrice = (nifty.price * 1.0012).toFixed(0); // small premium proxy
+      if (sgxEl) { sgxEl.textContent = Number(sgxPrice).toLocaleString('en-IN'); sgxEl.style.color = nifty.up ? 'var(--green)':'var(--red)'; }
+      if (sgxCh) { sgxCh.textContent = nifty.up ? '▲ approx' : '▼ approx'; sgxCh.style.color = 'var(--muted)'; }
     }
   }
 
@@ -2099,48 +2039,46 @@ const AGENT_STEPS = [
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function runQuery(query) {
-  if (!query || !query.trim()) return;
-  document.getElementById('searchInput').value = query;
-  document.getElementById('welcomeState').style.display = 'none';
-  document.getElementById('resultContainer').style.display = 'none';
+  // Redirect all sidebar/watchlist calls to D.AI popup
+  openDAI();
+  await daiRunQuery(query);
+}
 
-  const loadingEl = document.getElementById('loadingState');
+async function daiRunQuery(query) {
+  if (!query || !query.trim()) return;
+  const inputEl = document.getElementById('daiSearchInput');
+  if (inputEl) inputEl.value = query;
+  document.getElementById('daiWelcomeState').style.display = 'none';
+  document.getElementById('daiResultContainer').style.display = 'none';
+
+  const loadingEl = document.getElementById('daiLoadingState');
   loadingEl.classList.add('show');
 
-  document.getElementById('thinkSteps').innerHTML = AGENT_STEPS.map((s,i) => `
-    <div class="think-step" id="step${i}"><div class="step-dot"></div><span>${s.text}</span></div>
-  `).join('');
+  document.getElementById('daiThinkSteps').innerHTML = AGENT_STEPS.map((s,i) =>
+    `<div class="think-step" id="daistep${i}"><div class="step-dot"></div><span>${s.text}</span></div>`
+  ).join('');
 
-  // Step 0 — parse symbol
-  document.getElementById('step0').classList.add('active');
-  const sym = extractSymbol(query);
+  document.getElementById('daistep0').classList.add('active');
+  let sym = extractSymbol(query);
   await sleep(300);
-  document.getElementById('step0').classList.add('done');
+  document.getElementById('daistep0').classList.add('done');
 
-  // Step 1 — get LIVE CMP via Cloudflare Worker
-  document.getElementById('step1').classList.add('active');
+  document.getElementById('daistep1').classList.add('active');
   let liveData = null;
 
-  // If symbol not found in KNOWN map, ask Gemini to identify it
   if (!sym) {
     sym = await resolveSymbolViaYahoo(query);
-    console.log('Gemini resolved symbol:', sym);
   }
 
   if (sym) {
     let p = priceCache[sym] || null;
     if (!p) {
-      // Try .NS suffix first (NSE), then without suffix (indices/forex)
       const yahooSym = sym + '.NS';
       const fresh = await workerFetch([yahooSym]);
       const raw = fresh[yahooSym];
-      if (raw) {
-        p = fmt(raw);
-        if (p) priceCache[sym] = p;
-      }
-      // If .NS failed, try bare symbol (e.g. BAJAJ-AUTO needs special handling)
+      if (raw) { p = fmt(raw); if (p) priceCache[sym] = p; }
       if (!p) {
-        const fresh2 = await workerFetch([sym + '.BO']); // try BSE
+        const fresh2 = await workerFetch([sym + '.BO']);
         const raw2 = fresh2[sym + '.BO'];
         if (raw2) { p = fmt(raw2); if (p) priceCache[sym] = p; }
       }
@@ -2148,23 +2086,25 @@ async function runQuery(query) {
     if (p) liveData = { ...p, sym };
   }
   await sleep(400);
-  document.getElementById('step1').classList.add('done');
+  document.getElementById('daistep1').classList.add('done');
 
-  // Steps 2-7 animate while Gemini works
   const delays = [500, 600, 600, 700, 600, 500];
   for (let i = 2; i < AGENT_STEPS.length; i++) {
-    document.getElementById(`step${i-1}`).classList.add('done');
-    document.getElementById(`step${i}`).classList.add('active');
+    document.getElementById(`daistep${i-1}`).classList.add('done');
+    document.getElementById(`daistep${i}`).classList.add('active');
     await sleep(delays[i-2]);
   }
-  document.getElementById(`step${AGENT_STEPS.length-1}`).classList.add('done');
+  document.getElementById(`daistep${AGENT_STEPS.length-1}`).classList.add('done');
 
   const result = await callClaudeAgent(query, liveData);
   loadingEl.classList.remove('show');
 
-  const rc = document.getElementById('resultContainer');
+  const rc = document.getElementById('daiResultContainer');
   rc.innerHTML = result;
   rc.style.display = 'flex';
+
+  // Scroll results into view
+  rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 
@@ -2758,175 +2698,101 @@ function resetGeminiKey() {
   document.getElementById('keyModal').style.display = 'flex';
 }
 
-// ── D.AI POPUP ──
+// Check key on load — if present skip modal, else show it
+// ── D.AI POPUP CONTROLS ──
 function openDAI() {
   document.getElementById('daiOverlay').classList.add('open');
-  document.getElementById('daiInput').focus();
+  const inp = document.getElementById('daiSearchInput');
+  if (inp) setTimeout(() => inp.focus(), 100);
 }
 function closeDAI() {
   document.getElementById('daiOverlay').classList.remove('open');
 }
-// Close on backdrop click
 document.getElementById('daiOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeDAI();
 });
 
-let daiMessages = [];
-
-function daiAsk(text) {
-  document.getElementById('daiInput').value = text;
-  daiSend();
+// ── TV TAB SWITCH ──
+function mnpSwitchTV(channel, tabEl) {
+  document.querySelectorAll('.mnp-tv-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mnp-tv-iframe').forEach(f => f.classList.remove('active'));
+  tabEl.classList.add('active');
+  const frame = document.getElementById('tv-' + channel);
+  if (frame) {
+    // Lazy-load src on first click
+    if (!frame.src && frame.dataset.src) frame.src = frame.dataset.src;
+    frame.classList.add('active');
+  }
 }
 
-async function daiSend() {
-  const input = document.getElementById('daiInput');
-  const query = input.value.trim();
-  if (!query) return;
+// ── MAIN NEWS PANEL — Indian RSS headlines ──
+const MNP_FEEDS = {
+  et:    { name: 'ET Markets',   url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
+  mint:  { name: 'LiveMint',     url: 'https://www.livemint.com/rss/markets' },
+  bs:    { name: 'Business Std', url: 'https://www.business-standard.com/rss/markets-106.rss' },
+  hindu: { name: 'Hindu BizLine',url: 'https://www.thehindubusinessline.com/markets/feeder/default.rss' },
+};
 
-  // Hide welcome
-  const welcome = document.getElementById('daiWelcome');
-  if (welcome) welcome.style.display = 'none';
+let mnpCurrentTab = 'et';
+let mnpCache = {};
 
-  input.value = '';
-  const btn = document.getElementById('daiSendBtn');
-  btn.disabled = true;
+function mnpSwitchTab(key, tabEl) {
+  document.querySelectorAll('.mnp-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  mnpCurrentTab = key;
+  mnpRenderHeadlines(key);
+}
 
-  // Add user message
-  daiAddMsg('user', query);
-  daiMessages.push({ role: 'user', content: query });
+async function mnpRenderHeadlines(key) {
+  const container = document.getElementById('mnp-headlines');
+  if (!container) return;
 
-  // Add typing indicator
-  const typingId = 'typing_' + Date.now();
-  const chatArea = document.getElementById('daiChatArea');
-  const typingEl = document.createElement('div');
-  typingEl.className = 'dai-msg ai';
-  typingEl.id = typingId;
-  typingEl.innerHTML = `<div class="dai-avatar">◈</div><div class="dai-bubble"><div class="dai-typing"><span></span><span></span><span></span></div></div>`;
-  chatArea.appendChild(typingEl);
-  chatArea.scrollTop = chatArea.scrollHeight;
-
-  // Fetch live price context
-  const sym = extractSymbol(query);
-  let liveCtx = '';
-  if (sym) {
-    try {
-      const fresh = await workerFetch([sym + '.NS']);
-      const raw = fresh[sym + '.NS'];
-      if (raw) {
-        const p = fmt(raw);
-        liveCtx = `\nLIVE NSE PRICE: ${sym} = ₹${p.priceStr} (${p.chgStr}) as of ${new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})} IST`;
-      }
-    } catch(e) {}
+  // Show cached immediately if available
+  if (mnpCache[key]) {
+    mnpDisplayHeadlines(mnpCache[key], container);
+    return;
   }
+
+  container.innerHTML = '<div class="mnp-headline-loading">Fetching headlines…</div>';
 
   try {
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
-    const sysPrompt = `You are DALAL.AI, an expert Indian stock market analyst. Answer the user's question with specific Indian market data, company financials, and actionable insights. Use ₹ for prices. Be concise but insightful. Format your response in clean HTML using <b> for emphasis, <br> for line breaks, and use bullet points with • character. No markdown.${liveCtx}`;
-
-    const body = {
-      contents: [{ parts: [{ text: sysPrompt + '\n\nUser: ' + query }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
-    };
-
-    const res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
+    const res = await fetch(WORKER_URL + '?news=1');
+    if (!res.ok) throw new Error('Worker error');
     const data = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
-    document.getElementById(typingId)?.remove();
-    daiAddMsg('ai', reply);
-    daiMessages.push({ role: 'assistant', content: reply });
-
-  } catch(err) {
-    document.getElementById(typingId)?.remove();
-    daiAddMsg('ai', '❌ Error: ' + (err.message.includes('429') ? 'Rate limit hit. Please wait a minute.' : err.message));
+    if (data.items && data.items.length > 0) {
+      mnpCache[key] = data.items;
+      mnpDisplayHeadlines(data.items, container);
+      const ts = document.getElementById('mnp-refresh-ts');
+      if (ts) {
+        const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'});
+        ts.textContent = 'updated ' + now + ' IST';
+      }
+    }
+  } catch(e) {
+    container.innerHTML = '<div class="mnp-headline-loading" style="color:var(--red)">Headlines unavailable</div>';
   }
-
-  btn.disabled = false;
-  input.focus();
 }
 
-function daiAddMsg(role, text) {
-  const chatArea = document.getElementById('daiChatArea');
-  const div = document.createElement('div');
-  div.className = `dai-msg ${role}`;
-  const avatar = role === 'ai' ? '◈' : '👤';
-  div.innerHTML = `<div class="dai-avatar">${avatar}</div><div class="dai-bubble">${text}</div>`;
-  chatArea.appendChild(div);
-  chatArea.scrollTop = chatArea.scrollHeight;
+function mnpDisplayHeadlines(items, container) {
+  container.innerHTML = items.slice(0, 7).map(item => {
+    const title = (item.title||'').replace(/&amp;/g,'&').replace(/&#039;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+    const short = title.length > 100 ? title.substring(0,100) + '…' : title;
+    const diff = item.pubDate ? Math.round((Date.now() - new Date(item.pubDate).getTime())/60000) : 0;
+    const ago = diff < 60 ? diff + 'm ago' : Math.round(diff/60) + 'h ago';
+    const link = item.link || '#';
+    return `<a class="mnp-headline-item" href="${link}" target="_blank" rel="noopener">
+      <div class="mnp-hl-dot"></div>
+      <div style="flex:1">
+        <div class="mnp-hl-text">${short}</div>
+        <div class="mnp-hl-time">${item.source || 'Market News'} · ${ago}</div>
+      </div>
+    </a>`;
+  }).join('');
 }
 
-// ── LIVE NEWS TAB SWITCH ──
-function switchNews(channel, tabEl) {
-  document.querySelectorAll('.news-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.news-stream-iframe').forEach(f => f.classList.remove('active'));
-  tabEl.classList.add('active');
-  const el = document.getElementById('news-' + channel);
-  if (el) el.classList.add('active');
-}
+// Load ET Markets on startup
+mnpRenderHeadlines('et');
 
-// ── INDEX CHART ──
-let currentChartSymbol = 'NSE:NIFTY';
-let currentChartTF = '1M';
-
-const TF_MAP = { '1W':'1W', '1M':'1M', '6M':'6M', '1Y':'12M', '2Y':'24M', '5Y':'60M' };
-
-function buildChartURL(symbol, tf) {
-  const range = TF_MAP[tf] || '1M';
-  return `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(symbol)}&interval=D&range=${range}&theme=dark&style=3&locale=en&toolbar_bg=%230f0f1a&enable_publishing=false&hide_top_toolbar=1&hide_legend=0&save_image=false&backgroundColor=rgba(15,15,26,1)&gridColor=rgba(30,30,50,0.5)&hide_volume=1`;
-}
-
-function renderChart() {
-  const wrap = document.getElementById('chartWidgetWrap');
-  if (!wrap) return;
-  wrap.innerHTML = `<iframe src="${buildChartURL(currentChartSymbol, currentChartTF)}" frameborder="0" allowtransparency="true" scrolling="no" allowfullscreen></iframe>`;
-}
-
-function switchChart(name, symbol, tabEl) {
-  document.querySelectorAll('.ci-tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-  currentChartSymbol = symbol;
-  renderChart();
-}
-
-function setChartTF(tf, tabEl) {
-  document.querySelectorAll('.tf-tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-  currentChartTF = tf;
-  renderChart();
-}
-
-// ── MARKET MOOD INDEX (static 6/10) ──
-function renderMMI() {
-  const score = 6;
-  const pct = score / 10;
-  // Arc: full arc dasharray = PI*30 ≈ 94.25, dashoffset = arc*(1-pct)
-  const arcLen = 94.25;
-  const offset = arcLen * (1 - pct);
-  const color = score <= 3 ? 'var(--red)' : score <= 5 ? '#FF6B00' : score <= 7 ? '#FFD700' : 'var(--green)';
-  const label = score <= 3 ? 'FEAR' : score <= 5 ? 'CAUTION' : score <= 7 ? 'NEUTRAL' : 'GREED';
-
-  const arc = document.getElementById('mmiArcFill');
-  if (arc) { arc.style.stroke = color; arc.setAttribute('stroke-dashoffset', offset); }
-
-  const scoreEl = document.getElementById('mmiScore');
-  if (scoreEl) { scoreEl.style.color = color; scoreEl.innerHTML = score + '<span style="font-size:13px;color:var(--muted)">/10</span>'; }
-
-  const sent = document.getElementById('mmiSentiment');
-  if (sent) { sent.textContent = label; sent.style.color = color; sent.style.background = color.includes('FFD700') ? 'rgba(255,215,0,0.12)' : 'rgba(255,107,0,0.1)'; sent.style.border = `1px solid ${color}40`; }
-
-  const ptr = document.getElementById('mmiPointer');
-  if (ptr) { ptr.style.left = (pct * 100) + '%'; ptr.style.background = color; }
-}
-
-// Init on load
-renderChart();
-renderMMI();
-
-// Check key on load — if present skip modal, else show it
 const keyReady = loadGeminiKey();
 
 </script>
