@@ -929,131 +929,115 @@
   /* ── LIVE TV PANEL ── */
   .livetv-section {
     width: 100%;
-    background: #080810;
-    border-top: 2px solid var(--border);
-    border-bottom: 2px solid var(--border);
+    background: #060609;
+    border-top: 1px solid var(--border);
     padding: 0;
     position: relative;
     z-index: 1;
   }
 
-  .livetv-header {
+  /* Top bar: LIVE NEWS label + channel tabs */
+  .livetv-topbar {
     display: flex;
     align-items: center;
-    gap: 0;
     background: #0a0a14;
     border-bottom: 1px solid var(--border);
-    padding: 0 16px 0 0;
+    height: 36px;
     overflow-x: auto;
     scrollbar-width: none;
   }
+  .livetv-topbar::-webkit-scrollbar { display: none; }
 
-  .livetv-header::-webkit-scrollbar { display: none; }
-
-  .livetv-brand {
+  .livetv-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 20px;
-    height: 44px;
-    background: #0d0d1a;
+    gap: 7px;
+    padding: 0 14px;
+    height: 100%;
     border-right: 1px solid var(--border);
     flex-shrink: 0;
   }
 
-  .livetv-brand-dot {
-    width: 8px; height: 8px;
+  .livetv-dot {
+    width: 7px; height: 7px;
     border-radius: 50%;
     background: #ff3333;
-    box-shadow: 0 0 6px #ff3333;
+    box-shadow: 0 0 5px #ff3333;
     animation: liveBlink 1.2s ease-in-out infinite;
+    flex-shrink: 0;
   }
 
   @keyframes liveBlink {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+    50% { opacity: 0.25; }
   }
 
-  .livetv-brand-text {
+  .livetv-label-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 3px;
-    color: #ff3333;
+    letter-spacing: 2.5px;
+    color: var(--muted);
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .livetv-tabs {
     display: flex;
     align-items: center;
-    height: 44px;
+    height: 100%;
+    gap: 4px;
+    padding: 0 10px;
     flex: 1;
   }
 
   .livetv-tab {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 20px;
-    height: 100%;
+    gap: 6px;
+    padding: 0 10px;
+    height: 24px;
     cursor: pointer;
-    border-right: 1px solid var(--border);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     color: var(--muted);
     text-transform: uppercase;
-    transition: all 0.2s;
+    transition: all 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
-    position: relative;
+    border-radius: 3px;
+    border: 1px solid transparent;
   }
 
-  .livetv-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .livetv-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 
   .livetv-tab.active {
-    color: var(--text);
-    background: rgba(255,255,255,0.05);
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12);
   }
 
-  .livetv-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--saffron);
-  }
+  /* Each channel tab gets its own accent color when active */
+  .livetv-tab[data-ch="ndtv"].active      { background: rgba(200,16,46,0.2); border-color: rgba(200,16,46,0.5); color: #ff4d6a; }
+  .livetv-tab[data-ch="cnbc"].active      { background: rgba(0,91,153,0.2); border-color: rgba(0,91,153,0.5); color: #4da6ff; }
+  .livetv-tab[data-ch="bloomberg"].active { background: rgba(255,26,26,0.15); border-color: rgba(255,26,26,0.4); color: #ff6666; }
+  .livetv-tab[data-ch="sky"].active       { background: rgba(0,122,204,0.2); border-color: rgba(0,122,204,0.5); color: #4db8ff; }
 
-  .livetv-tab-logo {
-    width: 18px; height: 18px;
-    border-radius: 3px;
-    object-fit: contain;
+  .ch-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
     flex-shrink: 0;
+    opacity: 0.7;
   }
 
-  .channel-badge {
-    display: inline-block;
-    width: 18px; height: 18px;
-    border-radius: 3px;
-    font-size: 7px;
-    font-weight: 900;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    letter-spacing: 0;
-  }
-
-  .badge-ndtv { background: #c8102e; color: #fff; }
-  .badge-cnbc { background: #005b99; color: #fff; }
-  .badge-bloomberg { background: #ff1a1a; color: #fff; }
-  .badge-sky { background: #e8112d; color: #fff; }
-
+  /* Main body: compact player + YT-button fallback */
   .livetv-body {
     display: flex;
-    background: #050508;
-    min-height: 480px;
+    align-items: stretch;
+    background: #000;
+    height: 300px;
     position: relative;
   }
 
@@ -1061,153 +1045,115 @@
     flex: 1;
     position: relative;
     background: #000;
-    min-height: 480px;
+    overflow: hidden;
   }
 
   .livetv-player-wrap iframe {
     width: 100%;
     height: 100%;
-    min-height: 480px;
     border: none;
     display: block;
   }
 
-  .livetv-player-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    padding: 12px 16px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
-    display: flex;
+  /* Fallback shown when embed is blocked */
+  .livetv-fallback {
+    display: none;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    pointer-events: none;
-    z-index: 2;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    height: 100%;
+    background: #08080f;
+    text-align: center;
+    padding: 24px;
   }
 
-  .overlay-live-badge {
+  .livetv-fallback.visible { display: flex; }
+
+  .livetv-fallback-icon { font-size: 32px; opacity: 0.4; }
+
+  .livetv-fallback-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .livetv-fallback-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
     background: #ff1a1a;
     color: #fff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 2px;
-    padding: 3px 8px;
-    border-radius: 2px;
-  }
-
-  .overlay-channel-name {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
     letter-spacing: 1px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  }
-
-  .livetv-sidebar {
-    width: 260px;
-    flex-shrink: 0;
-    background: #0a0a14;
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .livetv-sidebar-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    padding: 10px 14px 8px;
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase;
-  }
-
-  .livetv-channel-list {
-    padding: 8px 0;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .livetv-channel-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
     cursor: pointer;
-    border-bottom: 1px solid rgba(30,30,50,0.4);
-    transition: background 0.15s;
+    transition: opacity 0.2s;
   }
 
-  .livetv-channel-item:hover { background: rgba(255,255,255,0.03); }
+  .livetv-fallback-btn:hover { opacity: 0.85; }
 
-  .livetv-channel-item.active { background: rgba(255,107,0,0.07); border-left: 2px solid var(--saffron); }
-
-  .channel-item-badge { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; flex-shrink: 0; }
-
-  .channel-item-info { flex: 1; }
-  .channel-item-name { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .channel-item-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); }
-
-  .channel-item-live {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 4px var(--green);
-    flex-shrink: 0;
-  }
-
-  .livetv-ticker-bottom {
-    background: #0d0d1a;
-    border-top: 1px solid var(--border);
-    padding: 8px 16px;
+  /* Bottom bar: scrolling ticker */
+  .livetv-news-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
+    background: #0d0010;
+    border-top: 1px solid #1a0020;
+    height: 28px;
     overflow: hidden;
   }
 
-  .ticker-bottom-label {
+  .livetv-news-tag {
+    background: #cc0000;
+    color: #fff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 900;
     letter-spacing: 2px;
-    color: #ff1a1a;
-    text-transform: uppercase;
+    padding: 0 10px;
+    height: 100%;
+    display: flex;
+    align-items: center;
     white-space: nowrap;
     flex-shrink: 0;
-    padding-right: 12px;
-    border-right: 1px solid var(--border);
   }
 
-  .ticker-bottom-scroll {
+  .livetv-news-scroll {
     flex: 1;
     overflow: hidden;
     position: relative;
-  }
-
-  .ticker-bottom-inner {
+    height: 100%;
     display: flex;
-    gap: 48px;
-    white-space: nowrap;
-    animation: tickerBottom 60s linear infinite;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--text);
+    align-items: center;
   }
 
-  @keyframes tickerBottom {
+  .livetv-news-inner {
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+    animation: liveNewsTicker 50s linear infinite;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #ccc;
+  }
+
+  @keyframes liveNewsTicker {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
 
+  .livetv-news-inner span { padding: 0 24px 0 0; }
+  .livetv-news-inner .sep { color: #cc0000; padding: 0 12px; }
+
   @media (max-width: 768px) {
-    .livetv-body { flex-direction: column; min-height: auto; }
-    .livetv-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
-    .livetv-player-wrap { min-height: 220px; }
-    .livetv-player-wrap iframe { min-height: 220px; }
-    .livetv-channel-list { display: flex; flex-wrap: wrap; padding: 8px; }
-    .livetv-channel-item { width: 50%; border: 1px solid rgba(30,30,50,0.4); border-radius: 6px; margin: 4px; }
+    .livetv-body { height: 220px; }
   }
 
   /* ── GEMINI KEY MODAL ── */
@@ -1547,107 +1493,53 @@
 
 <!-- ── LIVE TV NEWS PANEL ── -->
 <div class="livetv-section" id="liveTVSection">
-  <div class="livetv-header">
-    <div class="livetv-brand">
-      <div class="livetv-brand-dot"></div>
-      <div class="livetv-brand-text">LIVE NEWS</div>
+
+  <!-- Top bar: LIVE NEWS + channel tabs -->
+  <div class="livetv-topbar">
+    <div class="livetv-label">
+      <div class="livetv-dot"></div>
+      <span class="livetv-label-text">Live News</span>
     </div>
     <div class="livetv-tabs">
-      <div class="livetv-tab active" id="tab-ndtv" onclick="switchChannel('ndtv')">
-        <span class="channel-badge badge-ndtv">N</span>
-        NDTV PROFIT
+      <div class="livetv-tab active" id="tab-ndtv" data-ch="ndtv" onclick="switchChannel('ndtv')">
+        <span class="ch-dot" style="background:#ff4d6a;"></span>NDTV PROFIT
       </div>
-      <div class="livetv-tab" id="tab-cnbc" onclick="switchChannel('cnbc')">
-        <span class="channel-badge badge-cnbc">C</span>
-        CNBC TV18
+      <div class="livetv-tab" id="tab-cnbc" data-ch="cnbc" onclick="switchChannel('cnbc')">
+        <span class="ch-dot" style="background:#4da6ff;"></span>CNBC TV18
       </div>
-      <div class="livetv-tab" id="tab-bloomberg" onclick="switchChannel('bloomberg')">
-        <span class="channel-badge badge-bloomberg">B</span>
-        BLOOMBERG
+      <div class="livetv-tab" id="tab-bloomberg" data-ch="bloomberg" onclick="switchChannel('bloomberg')">
+        <span class="ch-dot" style="background:#ff6666;"></span>BLOOMBERG
       </div>
-      <div class="livetv-tab" id="tab-sky" onclick="switchChannel('sky')">
-        <span class="channel-badge badge-sky">S</span>
-        SKY NEWS
+      <div class="livetv-tab" id="tab-sky" data-ch="sky" onclick="switchChannel('sky')">
+        <span class="ch-dot" style="background:#4db8ff;"></span>SKY NEWS
       </div>
     </div>
   </div>
 
+  <!-- Player body -->
   <div class="livetv-body">
-    <div class="livetv-player-wrap">
-      <div class="livetv-player-overlay">
-        <span class="overlay-live-badge">&#9679; LIVE</span>
-        <span class="overlay-channel-name" id="liveTVChannelName">NDTV PROFIT</span>
-      </div>
-      <iframe
-        id="liveTVFrame"
-        src="https://www.youtube.com/embed/jcE6rrM0pZ4?autoplay=1&mute=1&rel=0&modestbranding=1"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-        title="Live News Stream"
-      ></iframe>
-    </div>
-
-    <div class="livetv-sidebar">
-      <div class="livetv-sidebar-label">Channels</div>
-      <div class="livetv-channel-list">
-        <div class="livetv-channel-item active" id="ch-ndtv" onclick="switchChannel('ndtv')">
-          <div class="channel-item-badge" style="background:#c8102e;color:#fff;border-radius:6px;font-size:8px;font-weight:900;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">N</div>
-          <div class="channel-item-info">
-            <div class="channel-item-name">NDTV Profit</div>
-            <div class="channel-item-sub">Business &amp; Markets</div>
-          </div>
-          <div class="channel-item-live"></div>
-        </div>
-        <div class="livetv-channel-item" id="ch-cnbc" onclick="switchChannel('cnbc')">
-          <div class="channel-item-badge" style="background:#005b99;color:#fff;border-radius:6px;font-size:7px;font-weight:900;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">C18</div>
-          <div class="channel-item-info">
-            <div class="channel-item-name">CNBC TV18</div>
-            <div class="channel-item-sub">India Business News</div>
-          </div>
-          <div class="channel-item-live"></div>
-        </div>
-        <div class="livetv-channel-item" id="ch-bloomberg" onclick="switchChannel('bloomberg')">
-          <div class="channel-item-badge" style="background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:6px;font-size:7px;font-weight:900;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">BLM</div>
-          <div class="channel-item-info">
-            <div class="channel-item-name">Bloomberg</div>
-            <div class="channel-item-sub">Global Finance</div>
-          </div>
-          <div class="channel-item-live"></div>
-        </div>
-        <div class="livetv-channel-item" id="ch-sky" onclick="switchChannel('sky')">
-          <div class="channel-item-badge" style="background:#e8112d;color:#fff;border-radius:6px;font-size:8px;font-weight:900;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">SKY</div>
-          <div class="channel-item-info">
-            <div class="channel-item-name">Sky News</div>
-            <div class="channel-item-sub">World News Live</div>
-          </div>
-          <div class="channel-item-live"></div>
-        </div>
-      </div>
-      <div style="padding:10px 14px; border-top:1px solid var(--border); flex:1; overflow-y:auto;">
-        <div class="livetv-sidebar-label" style="padding:0 0 8px; border:none;">BREAKING HEADLINES</div>
-        <div id="liveTVHeadlines" style="display:flex;flex-direction:column;gap:8px;">
-          <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Loading headlines…</div>
-        </div>
-      </div>
+    <div class="livetv-player-wrap" id="liveTVPlayerWrap">
+      <!-- iframe injected by JS -->
     </div>
   </div>
 
-  <div class="livetv-ticker-bottom">
-    <div class="ticker-bottom-label">BREAKING NEWS</div>
-    <div class="ticker-bottom-scroll">
-      <div class="ticker-bottom-inner" id="liveTVTicker">
-        <span>Market Watch: Sensex, Nifty trade with volatility amid global cues &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>RBI policy outlook: Markets watch for rate guidance &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>FII outflows weigh on indices; DII buying provides support &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>IT sector under pressure as US tech selloff continues &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>Crude oil softens — relief for India current account &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>Rupee under pressure vs dollar amid EM outflows &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>Market Watch: Sensex, Nifty trade with volatility amid global cues &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>RBI policy outlook: Markets watch for rate guidance &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>FII outflows weigh on indices; DII buying provides support &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>IT sector under pressure as US tech selloff continues &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>Crude oil softens — relief for India current account &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
-        <span>Rupee under pressure vs dollar amid EM outflows &nbsp;&nbsp;&#9670;&nbsp;&nbsp;</span>
+  <!-- Bottom news ticker -->
+  <div class="livetv-news-bar">
+    <div class="livetv-news-tag">BREAKING</div>
+    <div class="livetv-news-scroll">
+      <div class="livetv-news-inner" id="liveTVTicker">
+        <span>Sensex, Nifty trade with volatility amid global cues</span><span class="sep">&#9670;</span>
+        <span>RBI policy outlook: Markets watch for rate guidance</span><span class="sep">&#9670;</span>
+        <span>FII outflows continue; DII buying provides support to indices</span><span class="sep">&#9670;</span>
+        <span>IT sector under pressure as US tech selloff continues</span><span class="sep">&#9670;</span>
+        <span>Crude oil softens — relief for India current account</span><span class="sep">&#9670;</span>
+        <span>Rupee under pressure vs dollar amid EM outflows</span><span class="sep">&#9670;</span>
+        <span>Sensex, Nifty trade with volatility amid global cues</span><span class="sep">&#9670;</span>
+        <span>RBI policy outlook: Markets watch for rate guidance</span><span class="sep">&#9670;</span>
+        <span>FII outflows continue; DII buying provides support to indices</span><span class="sep">&#9670;</span>
+        <span>IT sector under pressure as US tech selloff continues</span><span class="sep">&#9670;</span>
+        <span>Crude oil softens — relief for India current account</span><span class="sep">&#9670;</span>
+        <span>Rupee under pressure vs dollar amid EM outflows</span><span class="sep">&#9670;</span>
       </div>
     </div>
   </div>
@@ -2819,97 +2711,116 @@ const keyReady = loadGeminiKey();
 
 // ════════════════════════════════════════════════════════════════
 //  LIVE TV — Channel switcher
+//  Uses YouTube /live channel redirects which always point to
+//  the current live broadcast without needing a video ID.
 // ════════════════════════════════════════════════════════════════
 
 const LIVE_CHANNELS = {
-  ndtv:      { name: 'NDTV PROFIT', videoId: 'jcE6rrM0pZ4' },
-  cnbc:      { name: 'CNBC TV18',   videoId: 'Bze3NX9NKNU' },
-  bloomberg: { name: 'BLOOMBERG',   videoId: 'dp8PhLsUcFE' },
-  sky:       { name: 'SKY NEWS',    videoId: '9Auq9mYxFEE' }
+  ndtv: {
+    name: 'NDTV PROFIT',
+    // NDTV Profit official YT channel handle
+    channelHandle: 'NDTVProfitIndia',
+    ytUrl: 'https://www.youtube.com/watch?v=Xjkzxup6194',
+    color: '#ff4d6a'
+  },
+  cnbc: {
+    name: 'CNBC TV18',
+    channelHandle: 'CNBCTV18News',
+    ytUrl: 'https://www.youtube.com/watch?v=IiFlm71gExA',
+    color: '#4da6ff'
+  },
+  bloomberg: {
+    name: 'BLOOMBERG',
+    channelHandle: 'BloombergTelevision',
+    ytUrl: 'https://www.youtube.com/watch?v=dp8PhLsUcFE',
+    color: '#ff6666'
+  },
+  sky: {
+    name: 'SKY NEWS',
+    channelHandle: 'SkyNews',
+    ytUrl: 'https://www.youtube.com/watch?v=9Auq9mYxFEE',
+    color: '#4db8ff'
+  }
 };
 
-let currentLiveChannel = 'ndtv';
+let currentLiveChannel = null;
+
+function buildPlayerHTML(key) {
+  var ch = LIVE_CHANNELS[key];
+  // Use channel handle /live endpoint — YouTube redirects this to the active
+  // live stream, bypassing stale video IDs entirely.
+  var embedSrc = 'https://www.youtube.com/embed/live_stream?channel='
+    + ch.channelHandle
+    + '&autoplay=1&mute=1&rel=0&modestbranding=1&enablejsapi=1';
+
+  return '<iframe id="liveTVFrame" '
+    + 'src="' + embedSrc + '" '
+    + 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+    + 'allowfullscreen '
+    + 'title="' + ch.name + ' Live" '
+    + 'style="width:100%;height:100%;border:none;display:block;">'
+    + '</iframe>'
+    + '<div id="liveTVFallback" class="livetv-fallback">'
+    + '<div class="livetv-fallback-icon">&#9654;</div>'
+    + '<div class="livetv-fallback-msg">' + ch.name + ' live stream<br>Watch directly on YouTube</div>'
+    + '<a class="livetv-fallback-btn" href="' + ch.ytUrl + '" target="_blank" rel="noopener">'
+    + '&#9654;&nbsp; Watch on YouTube</a>'
+    + '</div>';
+}
 
 function switchChannel(key) {
   if (key === currentLiveChannel) return;
   currentLiveChannel = key;
 
-  const ch = LIVE_CHANNELS[key];
+  // Rebuild player HTML (destroys old iframe = stops previous stream)
+  var wrap = document.getElementById('liveTVPlayerWrap');
+  wrap.innerHTML = buildPlayerHTML(key);
 
-  // Swap iframe src
-  const frame = document.getElementById('liveTVFrame');
-  frame.src = 'https://www.youtube.com/embed/' + ch.videoId
-    + '?autoplay=1&mute=1&rel=0&modestbranding=1';
+  // Handle iframe load error by showing fallback
+  var iframe = document.getElementById('liveTVFrame');
+  iframe.addEventListener('error', function() {
+    showLiveFallback();
+  });
 
-  // Update overlay name
-  document.getElementById('liveTVChannelName').textContent = ch.name;
-
-  // Toggle tab + sidebar item active state
+  // Toggle tab active states
   Object.keys(LIVE_CHANNELS).forEach(function(k) {
-    const tab  = document.getElementById('tab-' + k);
-    const item = document.getElementById('ch-' + k);
-    if (tab)  tab.classList.toggle('active',  k === key);
-    if (item) item.classList.toggle('active', k === key);
+    var tab = document.getElementById('tab-' + k);
+    if (tab) tab.classList.toggle('active', k === key);
   });
 }
 
-// Pull real headlines from the existing ET Markets news panel
-function updateLiveTVHeadlines() {
-  const container  = document.getElementById('liveTVHeadlines');
-  const newsItems  = document.querySelectorAll('#news-container .news-item');
-  if (!newsItems || newsItems.length === 0) return;
-
-  let html = '';
-  let count = 0;
-  newsItems.forEach(function(item) {
-    if (count >= 5) return;
-    const titleEl  = item.querySelector('.ni-title');
-    const sourceEl = item.querySelector('.ni-source');
-    const timeEl   = item.querySelector('.ni-time');
-    if (!titleEl) return;
-    const title  = titleEl.textContent.trim();
-    const source = sourceEl ? sourceEl.textContent.trim() : 'ET MARKETS';
-    const time   = timeEl ? timeEl.textContent.trim() : '';
-    html +=
-      '<div style="padding:6px 0;border-bottom:1px solid rgba(30,30,50,0.4);">' +
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--saffron);margin-bottom:2px;letter-spacing:1px;">' + source + '</div>' +
-        '<div style="font-size:10px;color:var(--text);line-height:1.4;">' + title + '</div>' +
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--muted);margin-top:2px;">' + time + '</div>' +
-      '</div>';
-    count++;
-  });
-  if (html) container.innerHTML = html;
+function showLiveFallback() {
+  var iframe = document.getElementById('liveTVFrame');
+  var fallback = document.getElementById('liveTVFallback');
+  if (iframe) iframe.style.display = 'none';
+  if (fallback) fallback.classList.add('visible');
 }
 
-// Rebuild bottom ticker with real live headlines
+// Update bottom ticker with real ET Markets headlines
 function updateLiveTVTicker() {
-  const newsItems = document.querySelectorAll('#news-container .news-item');
+  var newsItems = document.querySelectorAll('#news-container .news-item');
   if (!newsItems || newsItems.length === 0) return;
 
-  let headlines = [];
+  var headlines = [];
   newsItems.forEach(function(item) {
-    const titleEl = item.querySelector('.ni-title');
+    var titleEl = item.querySelector('.ni-title');
     if (titleEl) headlines.push(titleEl.textContent.trim());
   });
   if (headlines.length === 0) return;
 
-  const doubled = headlines.concat(headlines);
-  document.getElementById('liveTVTicker').innerHTML = doubled.map(function(h) {
-    return '<span>' + h + ' &nbsp;&nbsp;&#9670;&nbsp;&nbsp; </span>';
+  var doubled = headlines.concat(headlines);
+  var ticker = document.getElementById('liveTVTicker');
+  if (!ticker) return;
+  ticker.innerHTML = doubled.map(function(h) {
+    return '<span>' + h + '</span><span class="sep">&#9670;</span>';
   }).join('');
 }
 
-// Run after news loads
-setTimeout(function() {
-  updateLiveTVHeadlines();
-  updateLiveTVTicker();
-}, 4500);
+// Init: load NDTV first, then update ticker after news loads
+switchChannel('ndtv');
 
-// Refresh every 5 minutes with market data
-setInterval(function() {
-  updateLiveTVHeadlines();
-  updateLiveTVTicker();
-}, 5 * 60 * 1000);
+setTimeout(function() { updateLiveTVTicker(); }, 5000);
+setInterval(function() { updateLiveTVTicker(); }, 5 * 60 * 1000);
 
 </script>
 </body>
