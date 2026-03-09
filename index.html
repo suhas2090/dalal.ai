@@ -1253,6 +1253,63 @@
     flex-wrap: wrap;
   }
 
+  .x-feed-panel {
+    max-width: 100%;
+    padding-top: 4px;
+  }
+  .x-feed-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .x-feed-input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .x-feed-input:focus { outline: none; border-color: var(--saffron); }
+  .x-feed-btn {
+    border: 1px solid var(--saffron);
+    background: var(--saffron-dim);
+    color: var(--saffron);
+    border-radius: 6px;
+    padding: 0 14px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+  }
+  .x-feed-meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .x-feed-container {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 520px;
+    background: var(--panel);
+    padding: 10px;
+  }
+  .x-feed-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .x-feed-grid .twitter-timeline {
+    width: 100% !important;
+    min-height: 500px !important;
+  }
+  @media (max-width: 1000px) {
+    .x-feed-grid { grid-template-columns: 1fr; }
+  }
+
   /* ── MMI BLOCK ── */
   .mmi-wrap { padding: 4px 0 6px; }
   .mmi-gauge-row { position: relative; display: flex; justify-content: center; align-items: center; }
@@ -1547,10 +1604,11 @@
         <div class="chart-index-tabs">
           <div class="ci-tab active"  onclick="switchChart('NSE:NIFTY',this)">NIFTY 50</div>
           <div class="ci-tab"         onclick="switchChart('NSE:BANKNIFTY',this)">BANK NIFTY</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYMIDSELECT',this)">MIDSELECT</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:CNXSMALLCAP',this)">SMALLCAP</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:CNX500',this)">CNX 500</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYMIDCAP100',this)">MIDCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYSMLCAP100',this)">SMALLCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY500',this)">NIFTY 500</div>
           <div class="ci-tab"         onclick="switchChart('BSE:SENSEX',this)">SENSEX</div>
+          <div class="ci-tab"         onclick="switchChart('HEATMAP:INDIA',this)">HEATMAP</div>
         </div>
         <div class="chart-right-controls">
           <div class="chart-style-tabs">
@@ -1583,15 +1641,36 @@
       </div>
       <div class="mnp-tv-frame-wrap">
         <iframe id="tv-wion" class="mnp-tv-iframe active"
-          src="https://www.wionews.com/live-tv"
+          src="https://www.youtube-nocookie.com/embed/live_stream?channel=UC_gUM8rL-Lrg6O3adPW9K1g&autoplay=1&mute=1"
           allow="autoplay; fullscreen"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
         <iframe id="tv-bloomberg" class="mnp-tv-iframe"
-          src="" data-src="https://www.bloomberg.com/live"
+          src="" data-src="https://www.youtube-nocookie.com/embed/live_stream?channel=UCIALMKvObZNtJ6AmdCLP7Lg&autoplay=1&mute=1"
           allow="autoplay; fullscreen"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
       </div>
 
+    </div>
+
+    <!-- ③ X.COM LIVE FEED PANEL -->
+    <div class="main-news-panel x-feed-panel">
+      <div class="mnp-section-label" style="margin-bottom:10px">
+        <span>𝕏 Indian Market Pulse</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">real-time widgets</span>
+      </div>
+
+      <div class="mnp-tabs" id="xFeedTabs">
+        <div class="mnp-tab active" onclick="switchXFeedMode('accounts',this)">Accounts</div>
+        <div class="mnp-tab" onclick="switchXFeedMode('hashtags',this)">Hashtags</div>
+      </div>
+
+      <div class="x-feed-add-row">
+        <input id="xHandleInput" class="x-feed-input" type="text" placeholder="Add account (e.g. ETNOWlive)"/>
+        <button class="x-feed-btn" onclick="addXAccount()">Add</button>
+      </div>
+
+      <div id="xFeedMeta" class="x-feed-meta">Tracking: ETMarkets, NSEIndia, BSEIndia, moneycontrolcom</div>
+      <div id="xFeedContainer" class="x-feed-container"></div>
     </div>
 
   </div>
@@ -1832,7 +1911,7 @@ const SYMBOLS = {
   indices: {
     '^NSEI':        'NIFTY',
     '^BSESN':       'SENSEX',
-    'NIFTYBANK.NS': 'BANKNIFTY',
+    '^NSEBANK':    'BANKNIFTY',
     '^DJI':         'DJI',
     '^IXIC':        'NASDAQ',
   },
@@ -1902,7 +1981,7 @@ function applyToUI(raw, type) {
     const map = [
       ['^NSEI',        'nifty-val',     'nifty-chg'    ],
       ['^BSESN',       'sensex-val',    'sensex-chg'   ],
-      ['NIFTYBANK.NS', 'banknifty-val', 'banknifty-chg'],
+      ['^NSEBANK',     'banknifty-val', 'banknifty-chg'],
       ['^DJI',         'dji-val',       'dji-chg'      ],
       ['^IXIC',        'nasdaq-val',    'nasdaq-chg'   ],
     ];
@@ -1929,7 +2008,7 @@ function applyToUI(raw, type) {
     const crude = fmt(raw['BZ=F']);
     const gold  = fmt(raw['GC=F']);
     const gsec  = fmt(raw['IN10Y=X']);
-    const vix   = fmt(raw['^VIX']);
+    const vix   = fmt(raw['^INDIAVIX']);
 
     if (usd) {
       const el = document.getElementById('macro-usdinr');
@@ -2916,6 +2995,9 @@ let currentChartStyle  = '3'; // 3=line, 1=candles
 const TV_TF_MAP = { '1D':'1D', '1W':'1W', '1M':'1M', '6M':'6M', '12M':'12M' };
 
 function buildChartURL(symbol, tf, style) {
+  if (symbol === 'HEATMAP:INDIA') {
+    return 'https://www.tradingview.com/heatmap/stock/?color=change&dataset=India';
+  }
   const range = TV_TF_MAP[tf] || '1D';
   return `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart`
     + `&symbol=${encodeURIComponent(symbol)}`
@@ -2932,7 +3014,9 @@ function buildChartURL(symbol, tf, style) {
 function renderChart() {
   const wrap = document.getElementById('chartWidgetWrap');
   if (!wrap) return;
-  wrap.innerHTML = `<iframe src="${buildChartURL(currentChartSymbol, currentChartTF, currentChartStyle)}" allowtransparency="true" scrolling="no" allowfullscreen></iframe>`;
+  const src = buildChartURL(currentChartSymbol, currentChartTF, currentChartStyle);
+  const isHeatmap = currentChartSymbol === 'HEATMAP:INDIA';
+  wrap.innerHTML = `<iframe src="${src}" allowtransparency="true" scrolling="no" allowfullscreen ${isHeatmap ? '' : ''}></iframe>`;
 }
 
 function switchChart(symbol, tabEl) {
@@ -3034,7 +3118,7 @@ let mnpCurrentTab = 'et';
 let mnpCache = {};
 
 function mnpSwitchTab(key, tabEl) {
-  document.querySelectorAll('.mnp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.news-panel-right .mnp-tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
   mnpCurrentTab = key;
   mnpRenderHeadlines(key);
@@ -3082,9 +3166,81 @@ function mnpDisplayHeadlines(items, container) {
   }).join('');
 }
 
+
 mnpRenderHeadlines('et');
+setInterval(() => mnpRenderHeadlines(mnpCurrentTab), 5 * 60 * 1000);
+
+// ── X.COM MARKET FEED ──
+let xFeedMode = 'accounts';
+let xAccounts = ['ETMarkets', 'NSEIndia', 'BSEIndia', 'moneycontrolcom'];
+const xHashtags = ['nifty50', 'banknifty', 'sensex', 'indianstockmarket'];
+
+function loadTwitterWidgets() {
+  if (window.twttr && window.twttr.widgets) {
+    window.twttr.widgets.load(document.getElementById('xFeedContainer'));
+    return;
+  }
+  if (document.getElementById('twitter-wjs')) return;
+  const s = document.createElement('script');
+  s.id = 'twitter-wjs';
+  s.src = 'https://platform.twitter.com/widgets.js';
+  s.async = true;
+  document.body.appendChild(s);
+}
+
+function renderXFeed() {
+  const container = document.getElementById('xFeedContainer');
+  const meta = document.getElementById('xFeedMeta');
+  if (!container || !meta) return;
+
+  if (xFeedMode === 'accounts') {
+    const links = xAccounts.slice(0, 4).map(handle =>
+      `<a class="twitter-timeline" data-theme="dark" data-chrome="noheader nofooter" data-height="500" href="https://twitter.com/${handle}">Tweets by @${handle}</a>`
+    ).join('');
+    container.innerHTML = `<div class="x-feed-grid">${links}</div>`;
+    meta.textContent = `Tracking: ${xAccounts.join(', ')}`;
+  } else {
+    const tag = xHashtags[Math.floor(Math.random() * xHashtags.length)];
+    container.innerHTML = `<a class="twitter-timeline" data-theme="dark" data-height="520" href="https://twitter.com/hashtag/${tag}?src=hashtag_click">#${tag} feed</a>`;
+    meta.textContent = `Tracking hashtags: ${xHashtags.map(t => '#' + t).join(' ')}`;
+  }
+
+  loadTwitterWidgets();
+}
+
+function switchXFeedMode(mode, tabEl) {
+  const tabsWrap = document.getElementById('xFeedTabs');
+  if (!tabsWrap) return;
+  tabsWrap.querySelectorAll('.mnp-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  xFeedMode = mode;
+  renderXFeed();
+}
+
+function addXAccount() {
+  const input = document.getElementById('xHandleInput');
+  if (!input) return;
+  let handle = (input.value || '').trim().replace('@', '');
+  if (!handle) return;
+  if (!/^[A-Za-z0-9_]{1,15}$/.test(handle)) {
+    alert('Enter a valid X handle (letters, numbers, underscore).');
+    return;
+  }
+  if (!xAccounts.includes(handle)) xAccounts.unshift(handle);
+  input.value = '';
+  xFeedMode = 'accounts';
+  const accountTab = document.querySelector('#xFeedTabs .mnp-tab');
+  if (accountTab) {
+    document.querySelectorAll('#xFeedTabs .mnp-tab').forEach(t => t.classList.remove('active'));
+    accountTab.classList.add('active');
+  }
+  renderXFeed();
+}
+
+renderXFeed();
 
 const keyReady = loadGeminiKey();
+
 
 </script>
 </body>
