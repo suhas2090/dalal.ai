@@ -1253,6 +1253,82 @@
     flex-wrap: wrap;
   }
 
+  .x-feed-panel {
+    max-width: 100%;
+    padding-top: 4px;
+  }
+  .x-feed-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .x-feed-input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .x-feed-input:focus { outline: none; border-color: var(--saffron); }
+  .x-feed-btn {
+    border: 1px solid var(--saffron);
+    background: var(--saffron-dim);
+    color: var(--saffron);
+    border-radius: 6px;
+    padding: 0 14px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+  }
+  .x-feed-meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .x-feed-container {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 520px;
+    background: var(--panel);
+    padding: 10px;
+  }
+  .x-feed-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .x-feed-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+  }
+  .x-feed-card-head { display:flex; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .x-feed-handle { color: var(--saffron); font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .x-feed-open { color: var(--muted); text-decoration:none; font-size:10px; }
+  .x-feed-open:hover { color: var(--text); }
+  .x-feed-list { display:flex; flex-direction:column; gap:8px; }
+  .x-feed-item {
+    padding: 8px;
+    border: 1px solid rgba(30,30,50,0.7);
+    border-radius: 6px;
+    text-decoration: none;
+    display:block;
+    background: var(--panel);
+  }
+  .x-feed-item:hover { border-color: var(--saffron); }
+  .x-feed-text { color: var(--text); font-size:11px; line-height:1.5; margin-bottom:6px; }
+  .x-feed-time { color: var(--muted); font-size:9px; font-family:'JetBrains Mono',monospace; }
+  .x-feed-loading { color: var(--muted); font-size:11px; font-family:'JetBrains Mono',monospace; }
+  @media (max-width: 1000px) {
+    .x-feed-grid { grid-template-columns: 1fr; }
+  }
+
   /* ── MMI BLOCK ── */
   .mmi-wrap { padding: 4px 0 6px; }
   .mmi-gauge-row { position: relative; display: flex; justify-content: center; align-items: center; }
@@ -1546,11 +1622,12 @@
       <div class="chart-panel-header">
         <div class="chart-index-tabs">
           <div class="ci-tab active"  onclick="switchChart('NSE:NIFTY',this)">NIFTY 50</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:BANKNIFTY',this)">BANK NIFTY</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYMIDSELECT',this)">MIDSELECT</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:CNXSMALLCAP',this)">SMALLCAP</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:CNX500',this)">CNX 500</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYBANK',this)">BANK NIFTY</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_MIDCAP_100',this)">MIDCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_SMALLCAP_100',this)">SMALLCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_500',this)">NIFTY 500</div>
           <div class="ci-tab"         onclick="switchChart('BSE:SENSEX',this)">SENSEX</div>
+          <div class="ci-tab"         onclick="switchChart('HEATMAP:INDIA',this)">HEATMAP</div>
         </div>
         <div class="chart-right-controls">
           <div class="chart-style-tabs">
@@ -1583,15 +1660,36 @@
       </div>
       <div class="mnp-tv-frame-wrap">
         <iframe id="tv-wion" class="mnp-tv-iframe active"
-          src="https://www.wionews.com/live-tv"
+          src="https://www.youtube.com/embed/live_stream?channel=UC2L8igf0h6jrP4IhN8VZK_g&autoplay=1&mute=1"
           allow="autoplay; fullscreen"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+></iframe>
         <iframe id="tv-bloomberg" class="mnp-tv-iframe"
-          src="" data-src="https://www.bloomberg.com/live"
+          src="" data-src="https://www.youtube.com/embed/live_stream?channel=UCIALMKvObZNtJ6AmdCLP7Lg&autoplay=1&mute=1"
           allow="autoplay; fullscreen"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+></iframe>
       </div>
 
+    </div>
+
+    <!-- ③ X.COM LIVE FEED PANEL -->
+    <div class="main-news-panel x-feed-panel">
+      <div class="mnp-section-label" style="margin-bottom:10px">
+        <span>𝕏 Indian Market Pulse</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">real-time widgets</span>
+      </div>
+
+      <div class="mnp-tabs" id="xFeedTabs">
+        <div class="mnp-tab active" onclick="switchXFeedMode('accounts',this)">Accounts</div>
+        <div class="mnp-tab" onclick="switchXFeedMode('hashtags',this)">Hashtags</div>
+      </div>
+
+      <div class="x-feed-add-row">
+        <input id="xHandleInput" class="x-feed-input" type="text" placeholder="Add account (e.g. ETNOWlive)"/>
+        <button class="x-feed-btn" onclick="addXAccount()">Add</button>
+      </div>
+
+      <div id="xFeedMeta" class="x-feed-meta">Tracking: ETMarkets, NSEIndia, BSEIndia, moneycontrolcom</div>
+      <div id="xFeedContainer" class="x-feed-container"></div>
     </div>
 
   </div>
@@ -1832,7 +1930,7 @@ const SYMBOLS = {
   indices: {
     '^NSEI':        'NIFTY',
     '^BSESN':       'SENSEX',
-    'NIFTYBANK.NS': 'BANKNIFTY',
+    '^NSEBANK':    'BANKNIFTY',
     '^DJI':         'DJI',
     '^IXIC':        'NASDAQ',
   },
@@ -1902,7 +2000,7 @@ function applyToUI(raw, type) {
     const map = [
       ['^NSEI',        'nifty-val',     'nifty-chg'    ],
       ['^BSESN',       'sensex-val',    'sensex-chg'   ],
-      ['NIFTYBANK.NS', 'banknifty-val', 'banknifty-chg'],
+      ['^NSEBANK',     'banknifty-val', 'banknifty-chg'],
       ['^DJI',         'dji-val',       'dji-chg'      ],
       ['^IXIC',        'nasdaq-val',    'nasdaq-chg'   ],
     ];
@@ -1929,7 +2027,7 @@ function applyToUI(raw, type) {
     const crude = fmt(raw['BZ=F']);
     const gold  = fmt(raw['GC=F']);
     const gsec  = fmt(raw['IN10Y=X']);
-    const vix   = fmt(raw['^VIX']);
+    const vix   = fmt(raw['^INDIAVIX']);
 
     if (usd) {
       const el = document.getElementById('macro-usdinr');
@@ -2913,26 +3011,75 @@ let currentChartSymbol = 'NSE:NIFTY';
 let currentChartTF     = '1D';
 let currentChartStyle  = '3'; // 3=line, 1=candles
 
-const TV_TF_MAP = { '1D':'1D', '1W':'1W', '1M':'1M', '6M':'6M', '12M':'12M' };
+const TV_TF_MAP = { '1D':'D', '1W':'W', '1M':'M', '6M':'6M', '12M':'12M' };
 
-function buildChartURL(symbol, tf, style) {
-  const range = TV_TF_MAP[tf] || '1D';
-  return `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart`
-    + `&symbol=${encodeURIComponent(symbol)}`
-    + `&interval=${range}`
-    + `&theme=dark&style=${style}&locale=en`
-    + `&toolbar_bg=%230f0f1a`
-    + `&enable_publishing=false`
-    + `&hide_top_toolbar=0&hide_legend=0&hide_volume=1`
-    + `&backgroundColor=rgba(10,10,15,1)`
-    + `&gridColor=rgba(30,30,50,0.5)`
-    + `&save_image=false`;
+function injectTVScript(container, src, config) {
+  container.innerHTML = '';
+  const host = document.createElement('div');
+  host.className = 'tradingview-widget-container';
+  host.style.height = '100%';
+  host.style.width = '100%';
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+  widget.style.height = '100%';
+  widget.style.width = '100%';
+  host.appendChild(widget);
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.async = true;
+  script.src = src;
+  script.text = JSON.stringify(config);
+  host.appendChild(script);
+  container.appendChild(host);
 }
 
 function renderChart() {
   const wrap = document.getElementById('chartWidgetWrap');
   if (!wrap) return;
-  wrap.innerHTML = `<iframe src="${buildChartURL(currentChartSymbol, currentChartTF, currentChartStyle)}" allowtransparency="true" scrolling="no" allowfullscreen></iframe>`;
+
+  if (currentChartSymbol === 'HEATMAP:INDIA') {
+    injectTVScript(
+      wrap,
+      'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
+      {
+        dataSource: 'NSE',
+        blockSize: 'market_cap_basic',
+        blockColor: 'change',
+        grouping: 'sector',
+        locale: 'en',
+        symbolUrl: '',
+        colorTheme: 'dark',
+        hasTopBar: true,
+        isDataSetEnabled: true,
+        isZoomEnabled: true,
+        hasSymbolTooltip: true,
+        width: '100%',
+        height: '100%'
+      }
+    );
+    return;
+  }
+
+  injectTVScript(
+    wrap,
+    'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
+    {
+      autosize: true,
+      symbol: currentChartSymbol,
+      interval: TV_TF_MAP[currentChartTF] || 'D',
+      timezone: 'Asia/Kolkata',
+      theme: 'dark',
+      style: currentChartStyle,
+      locale: 'en',
+      allow_symbol_change: false,
+      hide_side_toolbar: false,
+      hide_top_toolbar: false,
+      withdateranges: true,
+      save_image: false,
+      calendar: false,
+      support_host: 'https://www.tradingview.com'
+    }
+  );
 }
 
 function switchChart(symbol, tabEl) {
@@ -3034,7 +3181,7 @@ let mnpCurrentTab = 'et';
 let mnpCache = {};
 
 function mnpSwitchTab(key, tabEl) {
-  document.querySelectorAll('.mnp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.news-panel-right .mnp-tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
   mnpCurrentTab = key;
   mnpRenderHeadlines(key);
@@ -3082,9 +3229,119 @@ function mnpDisplayHeadlines(items, container) {
   }).join('');
 }
 
+
 mnpRenderHeadlines('et');
+setInterval(() => mnpRenderHeadlines(mnpCurrentTab), 5 * 60 * 1000);
+
+// ── X.COM MARKET FEED (RSS fallback: Nitter + rss2json) ──
+let xFeedMode = 'accounts';
+let xAccounts = JSON.parse(localStorage.getItem('dalal_x_accounts') || 'null') || ['ETMarkets', 'NSEIndia', 'BSEIndia', 'moneycontrolcom'];
+const xHashtags = ['nifty50', 'banknifty', 'sensex', 'indianstockmarket'];
+
+function escapeHtml(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function fetchXFeedFromRSS(path) {
+  const rss = encodeURIComponent(`https://nitter.net/${path}/rss`);
+  const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=5`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('rss unavailable');
+  const data = await res.json();
+  if (!data.items) return [];
+  return data.items;
+}
+
+async function renderXFeed() {
+  const container = document.getElementById('xFeedContainer');
+  const meta = document.getElementById('xFeedMeta');
+  if (!container || !meta) return;
+
+  container.innerHTML = '<div class="x-feed-loading">Loading X feeds…</div>';
+
+  try {
+    if (xFeedMode === 'accounts') {
+      meta.textContent = `Tracking: ${xAccounts.join(', ')}`;
+      const slices = xAccounts.slice(0, 4);
+      const all = await Promise.all(slices.map(async (handle) => ({
+        handle,
+        items: await fetchXFeedFromRSS(handle).catch(() => [])
+      })));
+
+      container.innerHTML = `<div class="x-feed-grid">${all.map(({handle, items}) => {
+        const list = items.slice(0,3).map(it => {
+          const t = (it.title || '').replace(/https?:\/\/\S+/g, '').trim();
+          const ago = timeAgo(it.pubDate || new Date().toISOString());
+          return `<a class="x-feed-item" href="${it.link || `https://x.com/${handle}`}" target="_blank" rel="noopener">
+            <div class="x-feed-text">${escapeHtml(t || 'Open post')}</div>
+            <div class="x-feed-time">${ago}</div>
+          </a>`;
+        }).join('') || `<a class="x-feed-item" href="https://x.com/${handle}" target="_blank" rel="noopener"><div class="x-feed-text">Feed unavailable right now. Open profile on X.</div></a>`;
+
+        return `<div class="x-feed-card">
+          <div class="x-feed-card-head">
+            <div class="x-feed-handle">@${handle}</div>
+            <a class="x-feed-open" href="https://x.com/${handle}" target="_blank" rel="noopener">open ↗</a>
+          </div>
+          <div class="x-feed-list">${list}</div>
+        </div>`;
+      }).join('')}</div>`;
+    } else {
+      meta.textContent = `Tracking hashtags: ${xHashtags.map(t => '#' + t).join(' ')}`;
+      const tag = xHashtags[Math.floor(Math.random() * xHashtags.length)];
+      const items = await fetchXFeedFromRSS(`search?f=tweets&q=%23${tag}`);
+      const list = items.slice(0, 8).map(it => {
+        const t = (it.title || '').replace(/https?:\/\/\S+/g, '').trim();
+        return `<a class="x-feed-item" href="${it.link || `https://x.com/search?q=%23${tag}`}" target="_blank" rel="noopener">
+          <div class="x-feed-text">${escapeHtml(t || 'Open hashtag stream')}</div>
+          <div class="x-feed-time">${timeAgo(it.pubDate || new Date().toISOString())}</div>
+        </a>`;
+      }).join('');
+      container.innerHTML = `<div class="x-feed-card"><div class="x-feed-card-head"><div class="x-feed-handle">#${tag}</div><a class="x-feed-open" href="https://x.com/search?q=%23${tag}" target="_blank" rel="noopener">open ↗</a></div><div class="x-feed-list">${list || '<div class="x-feed-loading">Hashtag feed unavailable right now.</div>'}</div></div>`;
+    }
+  } catch (e) {
+    container.innerHTML = '<div class="x-feed-loading" style="color:var(--red)">X feed unavailable at the moment. Please try again.</div>';
+  }
+}
+
+function switchXFeedMode(mode, tabEl) {
+  const tabsWrap = document.getElementById('xFeedTabs');
+  if (!tabsWrap) return;
+  tabsWrap.querySelectorAll('.mnp-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  xFeedMode = mode;
+  renderXFeed();
+}
+
+function addXAccount() {
+  const input = document.getElementById('xHandleInput');
+  if (!input) return;
+  let handle = (input.value || '').trim().replace('@', '');
+  if (!handle) return;
+  if (!/^[A-Za-z0-9_]{1,15}$/.test(handle)) {
+    alert('Enter a valid X handle (letters, numbers, underscore).');
+    return;
+  }
+  if (!xAccounts.includes(handle)) {
+    xAccounts.unshift(handle);
+    localStorage.setItem('dalal_x_accounts', JSON.stringify(xAccounts));
+  }
+  input.value = '';
+  xFeedMode = 'accounts';
+  const accountTab = document.querySelector('#xFeedTabs .mnp-tab');
+  if (accountTab) {
+    document.querySelectorAll('#xFeedTabs .mnp-tab').forEach(t => t.classList.remove('active'));
+    accountTab.classList.add('active');
+  }
+  renderXFeed();
+}
+
+renderXFeed();
+setInterval(renderXFeed, 10 * 60 * 1000);
+
 
 const keyReady = loadGeminiKey();
+
 
 </script>
 </body>
