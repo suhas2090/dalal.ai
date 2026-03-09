@@ -3257,51 +3257,19 @@ async function renderXFeed() {
   const meta = document.getElementById('xFeedMeta');
   if (!container || !meta) return;
 
-  container.innerHTML = '<div class="x-feed-loading">Loading X feeds…</div>';
-
-  try {
-    if (xFeedMode === 'accounts') {
-      meta.textContent = `Tracking: ${xAccounts.join(', ')}`;
-      const slices = xAccounts.slice(0, 4);
-      const all = await Promise.all(slices.map(async (handle) => ({
-        handle,
-        items: await fetchXFeedFromRSS(handle).catch(() => [])
-      })));
-
-      container.innerHTML = `<div class="x-feed-grid">${all.map(({handle, items}) => {
-        const list = items.slice(0,3).map(it => {
-          const t = (it.title || '').replace(/https?:\/\/\S+/g, '').trim();
-          const ago = timeAgo(it.pubDate || new Date().toISOString());
-          return `<a class="x-feed-item" href="${it.link || `https://x.com/${handle}`}" target="_blank" rel="noopener">
-            <div class="x-feed-text">${escapeHtml(t || 'Open post')}</div>
-            <div class="x-feed-time">${ago}</div>
-          </a>`;
-        }).join('') || `<a class="x-feed-item" href="https://x.com/${handle}" target="_blank" rel="noopener"><div class="x-feed-text">Feed unavailable right now. Open profile on X.</div></a>`;
-
-        return `<div class="x-feed-card">
-          <div class="x-feed-card-head">
-            <div class="x-feed-handle">@${handle}</div>
-            <a class="x-feed-open" href="https://x.com/${handle}" target="_blank" rel="noopener">open ↗</a>
-          </div>
-          <div class="x-feed-list">${list}</div>
-        </div>`;
-      }).join('')}</div>`;
-    } else {
-      meta.textContent = `Tracking hashtags: ${xHashtags.map(t => '#' + t).join(' ')}`;
-      const tag = xHashtags[Math.floor(Math.random() * xHashtags.length)];
-      const items = await fetchXFeedFromRSS(`search?f=tweets&q=%23${tag}`);
-      const list = items.slice(0, 8).map(it => {
-        const t = (it.title || '').replace(/https?:\/\/\S+/g, '').trim();
-        return `<a class="x-feed-item" href="${it.link || `https://x.com/search?q=%23${tag}`}" target="_blank" rel="noopener">
-          <div class="x-feed-text">${escapeHtml(t || 'Open hashtag stream')}</div>
-          <div class="x-feed-time">${timeAgo(it.pubDate || new Date().toISOString())}</div>
-        </a>`;
-      }).join('');
-      container.innerHTML = `<div class="x-feed-card"><div class="x-feed-card-head"><div class="x-feed-handle">#${tag}</div><a class="x-feed-open" href="https://x.com/search?q=%23${tag}" target="_blank" rel="noopener">open ↗</a></div><div class="x-feed-list">${list || '<div class="x-feed-loading">Hashtag feed unavailable right now.</div>'}</div></div>`;
-    }
-  } catch (e) {
-    container.innerHTML = '<div class="x-feed-loading" style="color:var(--red)">X feed unavailable at the moment. Please try again.</div>';
+  if (xFeedMode === 'accounts') {
+    const links = xAccounts.slice(0, 4).map(handle =>
+      `<a class="twitter-timeline" data-theme="dark" data-chrome="noheader nofooter" data-height="500" href="https://twitter.com/${handle}">Tweets by @${handle}</a>`
+    ).join('');
+    container.innerHTML = `<div class="x-feed-grid">${links}</div>`;
+    meta.textContent = `Tracking: ${xAccounts.join(', ')}`;
+  } else {
+    const tag = xHashtags[Math.floor(Math.random() * xHashtags.length)];
+    container.innerHTML = `<a class="twitter-timeline" data-theme="dark" data-height="520" href="https://twitter.com/hashtag/${tag}?src=hashtag_click">#${tag} feed</a>`;
+    meta.textContent = `Tracking hashtags: ${xHashtags.map(t => '#' + t).join(' ')}`;
   }
+
+  loadTwitterWidgets();
 }
 
 function switchXFeedMode(mode, tabEl) {
@@ -3322,10 +3290,7 @@ function addXAccount() {
     alert('Enter a valid X handle (letters, numbers, underscore).');
     return;
   }
-  if (!xAccounts.includes(handle)) {
-    xAccounts.unshift(handle);
-    localStorage.setItem('dalal_x_accounts', JSON.stringify(xAccounts));
-  }
+  if (!xAccounts.includes(handle)) xAccounts.unshift(handle);
   input.value = '';
   xFeedMode = 'accounts';
   const accountTab = document.querySelector('#xFeedTabs .mnp-tab');
