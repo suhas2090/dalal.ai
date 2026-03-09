@@ -3191,8 +3191,8 @@ function mnpSwitchTV(channel, tabEl) {
   }
 }
 
-const RSS_PROXY_BASE_MARKET = `${WORKER_URL}/rss?url=`;
-const MARKET_NEWS_FEEDS = [
+const RSS_PROXY_BASE = `${WORKER_URL}/rss?url=`;
+const NEWS_FEEDS = [
   'https://www.business-standard.com/rss/latest',
   'https://feeds.reuters.com/reuters/businessNews',
   'https://www.moneycontrol.com/rss/latestnews.xml',
@@ -3202,18 +3202,18 @@ const MARKET_NEWS_FEEDS = [
   'https://www.cnbc.com/id/10001147/device/rss/rss.html'
 ];
 
-const MARKET_X_ACCOUNTS = [
+const X_ACCOUNTS = [
   'Bloomberg','Reuters','NSEIndia','BSEIndia','moneycontrolcom','ETNOWlive',
   'zerodhaonline','CNBCTV18News','RBI','SEBI_India','NDTVProfit','LiveMint'
 ];
 
-const marketFeedCache = {};
+const feedCache = {};
 
 function escapeHtml(str) {
   return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function compactTimeAgo(dateInput) {
+function timeAgo(dateInput) {
   const date = new Date(dateInput);
   if (Number.isNaN(date.getTime())) return 'now';
   const diffMs = Date.now() - date.getTime();
@@ -3225,21 +3225,15 @@ function compactTimeAgo(dateInput) {
 
 async function fetchFeedXml(feedUrl) {
   const cacheKey = `xml:${feedUrl}`;
-  const cached = marketFeedCache[cacheKey];
+  const cached = feedCache[cacheKey];
   if (cached && (Date.now() - cached.ts < 60000)) return cached.text;
 
-  const proxyUrl = RSS_PROXY_BASE_MARKET + encodeURIComponent(feedUrl);
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
-  try {
-    const res = await fetch(proxyUrl, { signal: ctrl.signal });
-    if (!res.ok) throw new Error(`feed fetch failed: ${feedUrl}`);
-    const text = await res.text();
-    marketFeedCache[cacheKey] = { ts: Date.now(), text };
-    return text;
-  } finally {
-    clearTimeout(timer);
-  }
+  const proxyUrl = RSS_PROXY_BASE + encodeURIComponent(feedUrl);
+  const res = await fetch(proxyUrl);
+  if (!res.ok) throw new Error(`feed fetch failed: ${feedUrl}`);
+  const text = await res.text();
+  feedCache[cacheKey] = { ts: Date.now(), text };
+  return text;
 }
 
 function parseRssItems(xmlText, sourceName) {
@@ -3257,13 +3251,13 @@ async function loadNewsFeed() {
   if (!container) return;
 
   const cacheKey = 'news:merged';
-  const cached = marketFeedCache[cacheKey];
+  const cached = feedCache[cacheKey];
   if (cached && (Date.now() - cached.ts < 60000)) {
     container.innerHTML = cached.html;
     return;
   }
 
-  const results = await Promise.all(MARKET_NEWS_FEEDS.map(async (feed) => {
+  const results = await Promise.all(NEWS_FEEDS.map(async (feed) => {
     try {
       const xml = await fetchFeedXml(feed);
       return parseRssItems(xml, new URL(feed).hostname.replace('www.', ''));
@@ -3288,12 +3282,12 @@ async function loadNewsFeed() {
     <a class="mnp-headline-item" href="${escapeHtml(item.link)}" target="_blank" rel="noopener">
       <span class="mnp-hl-dot"></span>
       <span class="mnp-hl-text">${escapeHtml(item.title)}</span>
-      <span class="mnp-hl-time">${compactTimeAgo(item.pubDate)}</span>
+      <span class="mnp-hl-time">${timeAgo(item.pubDate)}</span>
     </a>
   `).join('') || '<div class="mnp-headline-loading">Headlines unavailable</div>';
 
   container.innerHTML = html;
-  marketFeedCache[cacheKey] = { ts: Date.now(), html };
+  feedCache[cacheKey] = { ts: Date.now(), html };
 
   const ts = document.getElementById('mnp-refresh-ts');
   if (ts) {
@@ -3307,16 +3301,16 @@ async function loadXFeed() {
   const meta = document.getElementById('xFeedMeta');
   if (!list) return;
 
-  if (meta) meta.textContent = `Tracking: ${MARKET_X_ACCOUNTS.join(', ')}`;
+  if (meta) meta.textContent = `Tracking: ${X_ACCOUNTS.join(', ')}`;
 
   const cacheKey = 'x:merged';
-  const cached = marketFeedCache[cacheKey];
+  const cached = feedCache[cacheKey];
   if (cached && (Date.now() - cached.ts < 60000)) {
     list.innerHTML = cached.html;
     return;
   }
 
-  const feeds = MARKET_X_ACCOUNTS.map(handle => `https://rsshub.app/twitter/user/${encodeURIComponent(handle)}`);
+  const feeds = X_ACCOUNTS.map(handle => `https://rsshub.app/twitter/user/${encodeURIComponent(handle)}`);
   const results = await Promise.all(feeds.map(async (feed) => {
     try {
       const xml = await fetchFeedXml(feed);
@@ -3339,12 +3333,12 @@ async function loadXFeed() {
   const html = deduped.slice(0, 12).map(item => `
     <a class="x-feed-item" href="${escapeHtml(item.link)}" target="_blank" rel="noopener">
       <div class="x-feed-text">${escapeHtml(item.title)}</div>
-      <div class="x-feed-time">${compactTimeAgo(item.pubDate)}</div>
+      <div class="x-feed-time">${timeAgo(item.pubDate)}</div>
     </a>
   `).join('') || '<div class="x-feed-loading">Feed unavailable</div>';
 
   list.innerHTML = html;
-  marketFeedCache[cacheKey] = { ts: Date.now(), html };
+  feedCache[cacheKey] = { ts: Date.now(), html };
 }
 
 function switchXFeedMode(mode, tabEl) {
