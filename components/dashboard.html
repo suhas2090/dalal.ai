@@ -130,8 +130,8 @@
         <div class="chart-index-tabs">
           <div class="ci-tab active"  onclick="switchChart('NSE:NIFTY',this)">NIFTY 50</div>
           <div class="ci-tab"         onclick="switchChart('NSE:NIFTYBANK',this)">BANK NIFTY</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_MIDCAP_100',this)">MIDCAP 100</div>
-          <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_SMALLCAP_100',this)">SMALLCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYMIDCAP100',this)">MIDCAP 100</div>
+          <div class="ci-tab"         onclick="switchChart('NSE:NIFTYSMLCAP100',this)">SMALLCAP 100</div>
           <div class="ci-tab"         onclick="switchChart('NSE:NIFTY_500',this)">NIFTY 500</div>
           <div class="ci-tab"         onclick="switchChart('BSE:SENSEX',this)">SENSEX</div>
           <div class="ci-tab"         onclick="switchChart('HEATMAP:INDIA',this)">HEATMAP</div>
@@ -151,6 +151,17 @@
         </div>
       </div>
       <div class="chart-widget-wrap" id="chartWidgetWrap"></div>
+      <div class="chart-panel-header" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">Stock chart (NSE/BSE)</div>
+        <div style="display:flex;gap:6px">
+          <button id="stockExNSE" class="x-feed-btn" style="font-size:10px;padding:4px 9px" onclick="setStockExchange('NSE',this)">NSE</button>
+          <button id="stockExBSE" class="x-feed-btn" style="font-size:10px;padding:4px 9px;opacity:.7" onclick="setStockExchange('BSE',this)">BSE</button>
+        </div>
+        <input id="stockChartInput" class="x-feed-input" style="max-width:220px" type="text" placeholder="Type symbol (e.g. RELIANCE, TCS, 500325)" onkeydown="if(event.key==='Enter')loadStockChart()"/>
+        <button class="x-feed-btn" style="font-size:10px;padding:4px 10px" onclick="loadStockChart()">Load</button>
+        <span id="stockChartStatus" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)"></span>
+      </div>
+
     </div>
 
     <!-- ② + ④ ROW: Live TV + Daily Market Data side by side -->
@@ -248,14 +259,19 @@
         <button class="x-feed-btn" onclick="xManualRefresh()" style="font-size:10px;padding:4px 10px">⟳ Refresh</button>
       </div>
 
-      <!-- Add account row -->
+      <!-- Add account / hashtag row -->
       <div class="x-feed-add-row" style="margin-bottom:6px">
-        <input id="xHandleInput" class="x-feed-input" type="text" placeholder="Add @handle (e.g. ETCFO, RakeshJhunjhun)" onkeydown="if(event.key==='Enter')addXAccount()"/>
-        <button class="x-feed-btn" onclick="addXAccount()">+ Add</button>
+        <input id="xHandleInput" class="x-feed-input" type="text" placeholder="Add @handle (e.g. ETMarkets)" onkeydown="if(event.key==='Enter')addXAccount()"/>
+        <button class="x-feed-btn" onclick="addXAccount()">+ Account</button>
+      </div>
+      <div class="x-feed-add-row" style="margin-bottom:8px">
+        <input id="xTagInput" class="x-feed-input" type="text" placeholder="Add #hashtag (e.g. Nifty50, Sensex)" onkeydown="if(event.key==='Enter')addXTag()"/>
+        <button class="x-feed-btn" onclick="addXTag()">+ Hashtag</button>
       </div>
 
-      <!-- Active accounts chips -->
-      <div id="xAccountChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+      <!-- Active accounts + hashtags chips -->
+      <div id="xAccountChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
+      <div id="xHashtagChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
 
       <!-- Feed list -->
       <div id="xFeedList" style="display:flex;flex-direction:column;gap:8px;max-height:900px;overflow-y:auto"></div>
