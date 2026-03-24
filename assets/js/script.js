@@ -1277,6 +1277,7 @@ document.getElementById('daiOverlay').addEventListener('click', function(e) {
 let currentChartSymbol = 'NSE:NIFTY';
 let currentChartTF     = '1D';
 let currentChartStyle  = '3'; // 3=line, 1=candles
+let currentStockExchange = 'NSE';
 
 const TV_TF_MAP = { '1D':'D', '1W':'W', '1M':'M', '6M':'6M', '12M':'12M' };
 
@@ -1368,6 +1369,34 @@ function setChartTF(tf, tabEl) {
   tabEl.classList.add('active');
   currentChartTF = tf;
   renderChart();
+}
+
+function setStockExchange(exchange, btnEl) {
+  currentStockExchange = exchange;
+  const nseBtn = document.getElementById('stockExNSE');
+  const bseBtn = document.getElementById('stockExBSE');
+  if (nseBtn) nseBtn.style.opacity = exchange === 'NSE' ? '1' : '0.7';
+  if (bseBtn) bseBtn.style.opacity = exchange === 'BSE' ? '1' : '0.7';
+  if (btnEl) btnEl.style.opacity = '1';
+}
+
+function loadStockChart() {
+  const input = document.getElementById('stockChartInput');
+  const statusEl = document.getElementById('stockChartStatus');
+  if (!input) return;
+
+  const raw = (input.value || '').trim().toUpperCase();
+  const cleaned = raw.replace(/^[@#$]+/, '').replace(/[^A-Z0-9]/g, '');
+  if (!cleaned) {
+    if (statusEl) statusEl.textContent = 'Enter a NSE/BSE symbol first.';
+    return;
+  }
+
+  currentChartSymbol = `${currentStockExchange}:${cleaned}`;
+  renderChart();
+
+  document.querySelectorAll('.ci-tab').forEach(t => t.classList.remove('active'));
+  if (statusEl) statusEl.textContent = `Loaded ${currentChartSymbol}`;
 }
 
 renderChart();
@@ -1783,8 +1812,8 @@ dmdRender('sectors');
 //  𝕏 INDIAN MARKET PULSE v3.0
 //  ► Fetches via WORKER_URL + '?tweets=1&extra=...'
 //  ► Worker does Nitter RSS server-side (no CORS)
-//  ► Fallback tweets built into Worker (never blank)
-//  ► Auto-refresh every 3 min | Filterable | Add accounts
+//  ► Strictly live posts only (fallback/dummy is ignored)
+//  ► Auto-refresh every 5 min | Filterable | Add accounts + hashtags
 // ══════════════════════════════════════════════════════════════
 
 // Core accounts shown in chips UI (custom ones stored in localStorage)
@@ -1797,6 +1826,12 @@ const X_CORE_HANDLES = [
 // Custom (user-added) accounts — persisted in localStorage
 let xCustomAccounts = (() => {
   try { return JSON.parse(localStorage.getItem('dalal_x_custom') || '[]'); }
+  catch(e) { return []; }
+})();
+
+const X_CORE_HASHTAGS = ['IndianStockMarket','Nifty50','Sensex','BankNifty','DalalStreet'];
+let xCustomHashtags = (() => {
+  try { return JSON.parse(localStorage.getItem('dalal_x_tags') || '[]'); }
   catch(e) { return []; }
 })();
 
@@ -1850,8 +1885,11 @@ async function xFetchAll() {
 
   try {
     // Pass user-added custom handles to the worker
-    const extra = xCustomAccounts.join(',');
-    const workerUrl = WORKER_URL + '?tweets=1' + (extra ? '&extra=' + encodeURIComponent(extra) : '');
+    const extraAccounts = xCustomAccounts.join(',');
+    const tags = [...X_CORE_HASHTAGS, ...xCustomHashtags].join(',');
+    const workerUrl = WORKER_URL + '?tweets=1'
+      + (extraAccounts ? '&extra=' + encodeURIComponent(extraAccounts) : '')
+      + (tags ? '&hashtags=' + encodeURIComponent(tags) : '');
 
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 15000);
@@ -1862,18 +1900,15 @@ async function xFetchAll() {
     const data = await res.json();
 
     if (data.items && data.items.length > 0) {
+      const liveOnly = data.items.filter(t => (t.source || '').toLowerCase() !== 'fallback');
+
       // Enrich with computed fields
-      const enriched = data.items.map(t => ({
+      const enriched = liveOnly.map(t => ({
         ...t,
         id:         t.handle + '_' + (t.url || '') + '_' + (t.pubDate || ''),
         isUS:       xIsUS(t.text),
         isBreaking: xIsBreaking(t.text),
         tags:       xTags(t.text),
-        // Randomised-but-seeded engagement numbers (consistent per tweet)
-        likes:    Math.floor((t.text.length * 7 + t.handle.length * 13) % 900) + 40,
-        retweets: Math.floor((t.text.length * 3 + t.handle.length * 7)  % 300) + 10,
-        replies:  Math.floor((t.text.length * 2 + t.handle.length * 3)  % 120) + 5,
-        views:    (Math.floor((t.text.length * 11 + t.handle.length * 19) % 8000) + 800).toLocaleString('en-IN'),
       }));
 
       // Deduplicate against existing
@@ -1891,7 +1926,7 @@ async function xFetchAll() {
       if (listEl) listEl.innerHTML = `
         <div style="padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">
           <div style="font-size:20px;margin-bottom:8px">𝕏</div>
-          Could not reach Worker. Check your WORKER_URL is deployed.<br>
+          No live X posts available now. Check Worker/X source config.<br>
           <span style="font-size:9px;opacity:0.6">${WORKER_URL}</span>
         </div>`;
     }
@@ -1927,8 +1962,6 @@ function xRenderFeed() {
       `<span style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 6px;border-radius:3px;
         background:${tag.c}22;color:${tag.c};border:1px solid ${tag.c}44;white-space:nowrap">${tag.l}</span>`
     ).join('');
-    const srcLabel = t.source === 'fallback'
-      ? `<span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted);opacity:0.45">~demo</span>` : '';
     const leftBorder = t.isBreaking ? 'border-left:3px solid var(--red)' : t.isUS ? 'border-left:3px solid #64B5F6' : '';
 
     return `<a href="${xEsc(t.url)}" target="_blank" rel="noopener"
@@ -1959,11 +1992,7 @@ function xRenderFeed() {
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px">
         <div style="display:flex;gap:4px;flex-wrap:wrap">${tagsHtml}</div>
         <div style="display:flex;gap:10px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">
-          ${srcLabel}
-          <span>👁 ${t.views}</span>
-          <span style="color:${t.likes > 500 ? '#e0245e' : 'var(--muted)'}">♥ ${t.likes.toLocaleString('en-IN')}</span>
-          <span>🔁 ${t.retweets.toLocaleString('en-IN')}</span>
-          <span>💬 ${t.replies.toLocaleString('en-IN')}</span>
+          <span>${new Date(t.pubDate).toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short',timeZone:'Asia/Kolkata'})} IST</span>
         </div>
       </div>
     </a>`;
@@ -2014,24 +2043,75 @@ function xRemoveAccount(handle) {
 
 // ── RENDER CHIPS ──
 function xRenderChips() {
-  const el = document.getElementById('xAccountChips');
-  if (!el) return;
-  // Show core chips (no remove) + custom chips (with remove)
-  const coreHtml = X_CORE_HANDLES.map(h =>
-    `<span style="display:inline-flex;align-items:center;background:var(--panel);border:1px solid var(--border);
-      border-radius:20px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">
-      <span style="color:var(--saffron)">@${xEsc(h)}</span>
-    </span>`
-  ).join('');
-  const customHtml = xCustomAccounts.map(h =>
-    `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,107,0,0.08);
-      border:1px solid var(--saffron);border-radius:20px;padding:2px 6px 2px 8px;
-      font-family:'JetBrains Mono',monospace;font-size:9px">
-      <span style="color:var(--saffron)">@${xEsc(h)}</span>
-      <span onclick="xRemoveAccount('${xEsc(h)}')" style="cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding-left:2px" title="Remove">×</span>
-    </span>`
-  ).join('');
-  el.innerHTML = coreHtml + customHtml;
+  const accEl = document.getElementById('xAccountChips');
+  const tagEl = document.getElementById('xHashtagChips');
+
+  if (accEl) {
+    const coreHtml = X_CORE_HANDLES.map(h =>
+      `<span style="display:inline-flex;align-items:center;background:var(--panel);border:1px solid var(--border);
+        border-radius:20px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">
+        <span style="color:var(--saffron)">@${xEsc(h)}</span>
+      </span>`
+    ).join('');
+    const customHtml = xCustomAccounts.map(h =>
+      `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,107,0,0.08);
+        border:1px solid var(--saffron);border-radius:20px;padding:2px 6px 2px 8px;
+        font-family:'JetBrains Mono',monospace;font-size:9px">
+        <span style="color:var(--saffron)">@${xEsc(h)}</span>
+        <span onclick="xRemoveAccount('${xEsc(h)}')" style="cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding-left:2px" title="Remove">×</span>
+      </span>`
+    ).join('');
+    accEl.innerHTML = coreHtml + customHtml;
+  }
+
+  if (tagEl) {
+    const coreTags = X_CORE_HASHTAGS.map(tag =>
+      `<span style="display:inline-flex;align-items:center;background:var(--panel);border:1px solid var(--border);
+        border-radius:20px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">
+        <span style="color:#64B5F6">#${xEsc(tag)}</span>
+      </span>`
+    ).join('');
+    const customTags = xCustomHashtags.map(tag =>
+      `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(100,181,246,0.10);
+        border:1px solid #64B5F6;border-radius:20px;padding:2px 6px 2px 8px;
+        font-family:'JetBrains Mono',monospace;font-size:9px">
+        <span style="color:#64B5F6">#${xEsc(tag)}</span>
+        <span onclick="xRemoveTag('${xEsc(tag)}')" style="cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding-left:2px" title="Remove">×</span>
+      </span>`
+    ).join('');
+    tagEl.innerHTML = coreTags + customTags;
+  }
+}
+
+function addXTag() {
+  const input = document.getElementById('xTagInput');
+  if (!input) return;
+  const tag = (input.value || '').trim().replace(/^#/, '');
+  if (!tag) return;
+  if (!/^[A-Za-z0-9_]{1,60}$/.test(tag)) {
+    alert('Enter a valid hashtag (letters, numbers, underscore).');
+    return;
+  }
+  const all = [...X_CORE_HASHTAGS, ...xCustomHashtags];
+  if (all.some(t => t.toLowerCase() === tag.toLowerCase())) {
+    input.value = '';
+    alert('#' + tag + ' is already tracked!');
+    return;
+  }
+  xCustomHashtags.unshift(tag);
+  xSaveCustom();
+  xRenderChips();
+  input.value = '';
+  xAllTweets = [];
+  xFetchAll();
+}
+
+function xRemoveTag(tag) {
+  xCustomHashtags = xCustomHashtags.filter(t => t.toLowerCase() !== tag.toLowerCase());
+  xSaveCustom();
+  xRenderChips();
+  xAllTweets = [];
+  xFetchAll();
 }
 
 // ── TIMESTAMP ──
@@ -2050,12 +2130,13 @@ function xManualRefresh() {
 
 function xSaveCustom() {
   try { localStorage.setItem('dalal_x_custom', JSON.stringify(xCustomAccounts)); } catch(e) {}
+  try { localStorage.setItem('dalal_x_tags', JSON.stringify(xCustomHashtags)); } catch(e) {}
 }
 
 // ── INIT ──
 xRenderChips();
 xFetchAll();
-setInterval(xFetchAll, 3 * 60 * 1000);
+setInterval(xFetchAll, 5 * 60 * 1000);
 
 
 // ══════════════════════════════════════════════════════
