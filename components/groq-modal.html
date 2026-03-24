@@ -1,0 +1,29 @@
+     GROQ + ALPHA VANTAGE KEY MODAL
+══════════════════════════════════════════════════════ -->
+<div id="groqModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(6px)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;width:90%;max-width:480px;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:4px">⚡ Live AI + Data Setup</div>
+    <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:22px;line-height:1.7">
+      Keys are stored <strong>only in your browser</strong>. Never sent anywhere except the respective APIs directly.<br>
+      <a href="https://console.groq.com/keys" target="_blank" style="color:var(--saffron);text-decoration:none">Groq free key →</a> &nbsp;|&nbsp;
+      <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:#00BCD4;text-decoration:none">Alpha Vantage free key →</a>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--saffron);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:5px">GROQ API KEY — Powers Scenario + Supply Chain AI (Llama 3.3 70B)</div>
+      <input id="groqKeyInput" type="password" placeholder="gsk_…" autocomplete="off"
+        style="width:100%;background:var(--ink);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;outline:none"
+        onfocus="this.style.borderColor='var(--saffron)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:10px;color:#00BCD4;font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:5px">ALPHA VANTAGE KEY — Real Macro Data (Crude, GDP, CPI, FX Rates)</div>
+      <input id="avKeyInput" type="password" placeholder="Your Alpha Vantage key…" autocomplete="off"
+        style="width:100%;background:var(--ink);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;outline:none"
+        onfocus="this.style.borderColor='#00BCD4'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="saveGroqKeys()" style="flex:1;background:linear-gradient(135deg,var(--saffron),#c85000);color:#fff;border:none;border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px">SAVE & ACTIVATE LIVE AI</button>
+      <button onclick="closeGroqModal()" style="background:var(--border);color:var(--text);border:none;border-radius:8px;padding:12px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer">Cancel</button>
+    </div>
+    <div id="groqModalStatus" style="font-size:10px;color:var(--muted);margin-top:10px;font-family:'JetBrains Mono',monospace;min-height:16px"></div>
+  </div>
+</div>
