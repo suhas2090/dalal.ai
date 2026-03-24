@@ -1,0 +1,86 @@
+     FLOATING INTELLIGENCE DOCK  — bottom-right
+══════════════════════════════════════════════════════ -->
+<div id="toolDock" style="
+  position:fixed; bottom:24px; right:24px; z-index:9000;
+  display:flex; flex-direction:column; align-items:flex-end; gap:10px;
+">
+
+  <!-- Collapsed FAB when dock is hidden -->
+  <button id="dockFab" onclick="toggleDock()" title="Intelligence Tools" style="
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(135deg,#7C5CFC,#5a3de8);
+    border:none; color:#fff; font-size:20px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(124,92,252,0.5);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.2s, box-shadow 0.2s;
+  " onmouseover="this.style.transform='scale(1.08)';this.style.boxShadow='0 6px 28px rgba(124,92,252,0.7)'"
+     onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 20px rgba(124,92,252,0.5)'">
+    ✦
+  </button>
+
+  <!-- Expanded dock panel -->
+  <div id="dockPanel" style="
+    display:none; flex-direction:column; gap:8px; align-items:flex-end;
+  ">
+
+    <!-- AI Keys status chip -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">INTELLIGENCE SUITE</span>
+    </div>
+
+    <!-- Scenario Simulator -->
+    <button onclick="openScenario()" style="
+      display:flex; align-items:center; gap:10px;
+      background:rgba(13,13,26,0.95); border:1px solid rgba(124,92,252,0.5);
+      border-radius:12px; padding:10px 16px; cursor:pointer;
+      backdrop-filter:blur(16px);
+      box-shadow:0 4px 16px rgba(0,0,0,0.4), 0 0 0 0 rgba(124,92,252,0.3);
+      transition:all 0.2s; width:200px;
+      font-family:'JetBrains Mono',monospace;
+    " onmouseover="this.style.borderColor='rgba(124,92,252,0.9)';this.style.boxShadow='0 6px 24px rgba(0,0,0,0.5),0 0 0 2px rgba(124,92,252,0.25)';this.style.transform='translateX(-4px)'"
+       onmouseout="this.style.borderColor='rgba(124,92,252,0.5)';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.4)';this.style.transform='translateX(0)'">
+      <span style="font-size:18px;flex-shrink:0">⚡</span>
+      <div style="text-align:left">
+        <div style="font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:0.5px">SCENARIO</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px">Macro impact simulator</div>
+      </div>
+    </button>
+
+    <!-- Supply Chain -->
+    <button onclick="openSupplyChain()" style="
+      display:flex; align-items:center; gap:10px;
+      background:rgba(13,13,26,0.95); border:1px solid rgba(0,188,212,0.5);
+      border-radius:12px; padding:10px 16px; cursor:pointer;
+      backdrop-filter:blur(16px);
+      box-shadow:0 4px 16px rgba(0,0,0,0.4);
+      transition:all 0.2s; width:200px;
+      font-family:'JetBrains Mono',monospace;
+    " onmouseover="this.style.borderColor='rgba(0,188,212,0.9)';this.style.boxShadow='0 6px 24px rgba(0,0,0,0.5),0 0 0 2px rgba(0,188,212,0.2)';this.style.transform='translateX(-4px)'"
+       onmouseout="this.style.borderColor='rgba(0,188,212,0.5)';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.4)';this.style.transform='translateX(0)'">
+      <span style="font-size:18px;flex-shrink:0">🔗</span>
+      <div style="text-align:left">
+        <div style="font-size:11px;font-weight:700;color:#22d3ee;letter-spacing:0.5px">SUPPLY CHAIN</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px">Risk dependency map</div>
+      </div>
+    </button>
+
+    <!-- AI Keys -->
+    <button id="groqSetupBtn" onclick="openGroqModal()" style="
+      display:flex; align-items:center; gap:10px;
+      background:rgba(13,13,26,0.95); border:1px solid rgba(255,107,0,0.4);
+      border-radius:12px; padding:10px 16px; cursor:pointer;
+      backdrop-filter:blur(16px);
+      box-shadow:0 4px 16px rgba(0,0,0,0.4);
+      transition:all 0.2s; width:200px;
+      font-family:'JetBrains Mono',monospace;
+    " onmouseover="this.style.borderColor='rgba(255,107,0,0.9)';this.style.boxShadow='0 6px 24px rgba(0,0,0,0.5),0 0 0 2px rgba(255,107,0,0.2)';this.style.transform='translateX(-4px)'"
+       onmouseout="this.style.borderColor='rgba(255,107,0,0.4)';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.4)';this.style.transform='translateX(0)'">
+      <span style="font-size:18px;flex-shrink:0">⚙</span>
+      <div style="text-align:left">
+        <div id="dockKeyLabel" style="font-size:11px;font-weight:700;color:var(--saffron);letter-spacing:0.5px">AI KEYS</div>
+        <div id="dockKeyStatus" style="font-size:9px;color:var(--muted);margin-top:1px">Groq + Alpha Vantage</div>
+      </div>
+    </button>
+
+  </div>
+</div>

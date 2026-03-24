@@ -1,0 +1,192 @@
+<!-- ══════════════════════════════════════════════════════
+     SCENARIO SIMULATOR OVERLAY
+══════════════════════════════════════════════════════ -->
+<div class="module-overlay scenario-overlay" id="scenarioOverlay">
+  <div class="module-hdr">
+    <div class="module-hdr-left">
+      <div class="module-title">⚡ <span>Scenario</span> Simulator</div>
+      <div class="module-sub">Model macroeconomic shocks · Sector impact heatmap · Portfolio stress test · Risk distribution</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="scenarioStatus" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">Configure scenario →</div>
+      <button class="module-close" onclick="closeScenario()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <div class="module-body">
+    <!-- LEFT: Inputs -->
+    <div class="module-sidebar">
+      <div>
+        <div class="mod-label">Preset Scenarios</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="sc-co-chip active" style="text-align:left;width:100%;font-size:10px;padding:7px 10px" onclick="loadPreset('rateHike',this)">📈 RBI Rate Hike +100bps</button>
+          <button class="sc-co-chip" style="text-align:left;width:100%;font-size:10px;padding:7px 10px" onclick="loadPreset('oilShock',this)">🛢️ Oil Shock +40%</button>
+          <button class="sc-co-chip" style="text-align:left;width:100%;font-size:10px;padding:7px 10px" onclick="loadPreset('recession',this)">📉 Mild Recession</button>
+          <button class="sc-co-chip" style="text-align:left;width:100%;font-size:10px;padding:7px 10px" onclick="loadPreset('rupeeSlide',this)">💱 Rupee Depreciation -10%</button>
+          <button class="sc-co-chip" style="text-align:left;width:100%;font-size:10px;padding:7px 10px" onclick="loadPreset('rally',this)">🚀 Bull Market Rally</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="mod-label">Macro Variables</div>
+        <div class="sim-slider-group">
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">🏦 Interest Rate Δ</span>
+              <span class="sim-slider-val" id="sv-rate">0%</span>
+            </div>
+            <input type="range" class="sim-range purple" min="-3" max="3" step="0.25" value="0" id="sl-rate" oninput="simUpdateSlider('rate',this.value,'%')">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">🛢️ Oil Price Δ</span>
+              <span class="sim-slider-val" id="sv-oil">0%</span>
+            </div>
+            <input type="range" class="sim-range red" min="-50" max="80" step="5" value="0" id="sl-oil" oninput="simUpdateSlider('oil',this.value,'%')">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">📊 Inflation Δ</span>
+              <span class="sim-slider-val" id="sv-inflation">0%</span>
+            </div>
+            <input type="range" class="sim-range" min="-3" max="6" step="0.25" value="0" id="sl-inflation" oninput="simUpdateSlider('inflation',this.value,'%')" style="accent-color:var(--saffron)">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">💱 INR/USD Δ</span>
+              <span class="sim-slider-val" id="sv-fx">0%</span>
+            </div>
+            <input type="range" class="sim-range cyan" min="-15" max="15" step="0.5" value="0" id="sl-fx" oninput="simUpdateSlider('fx',this.value,'%')">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">🌱 GDP Growth Δ</span>
+              <span class="sim-slider-val" id="sv-gdp">0%</span>
+            </div>
+            <input type="range" class="sim-range green" min="-5" max="5" step="0.25" value="0" id="sl-gdp" oninput="simUpdateSlider('gdp',this.value,'%')">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">🌾 Commodity Shock</span>
+              <span class="sim-slider-val" id="sv-comm">0%</span>
+            </div>
+            <input type="range" class="sim-range" min="-40" max="60" step="5" value="0" id="sl-comm" oninput="simUpdateSlider('comm',this.value,'%')" style="accent-color:var(--saffron)">
+          </div>
+        </div>
+      </div>
+
+      <button class="run-btn purple" onclick="runScenario()">⚡ RUN SIMULATION</button>
+
+      <div>
+        <div class="mod-label">Scenario Comparison Log</div>
+        <div id="savedScenariosList" style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">
+          <div style="font-size:10px">Run a scenario to compare.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Outputs -->
+    <div class="module-main">
+      <!-- Row 1: Heatmap + Drawdown -->
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:14px;flex-shrink:0">
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr">
+            <span>📊 Sector Impact Heatmap</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)" id="heatmapLastRun">Not run yet</span>
+          </div>
+          <div class="mod-panel-body">
+            <div class="heatmap-grid" id="sectorHeatmap"></div>
+            <div style="display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted)">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#FF1744;display:inline-block"></span>Strong -</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#FF6B00;display:inline-block"></span>Moderate -</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1E1E32;display:inline-block;border:1px solid #333"></span>Neutral</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#00C853;display:inline-block"></span>Positive +</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>📉 Portfolio Risk</span></div>
+          <div class="mod-panel-body" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:3px">DRAWDOWN PROBABILITY</div>
+              <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700" id="drawdownPct">—</div>
+              <div class="drawdown-meter"><div class="drawdown-fill" id="drawdownFill" style="width:0%"></div><div class="drawdown-marker" id="drawdownMarker" style="left:0%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px"><span>LOW</span><span>HIGH</span></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px">PORTFOLIO VALUE Δ</div>
+              <div id="portfolioImpactList" style="display:flex;flex-direction:column;gap:5px"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px">RISK EXPOSURE SCORE</div>
+              <div class="risk-bar-bg" style="height:8px;border-radius:4px"><div class="risk-bar" id="riskScoreBar" style="width:0%;background:var(--gold);height:100%;border-radius:4px;transition:width 0.8s"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">Score</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--text)" id="riskScoreVal">—/100</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Asset Impact + Risk Distribution -->
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;flex-shrink:0">
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr">
+            <span>💹 Expected Gain/Loss Per Asset</span>
+            <div style="display:flex;gap:6px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(0,200,83,0.1);color:var(--green);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,200,83,0.3)" id="winnersCount">Winners: —</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(255,23,68,0.1);color:var(--red);padding:2px 7px;border-radius:4px;border:1px solid rgba(255,23,68,0.3)" id="losersCount">Losers: —</span>
+            </div>
+          </div>
+          <div id="assetImpactTable" style="max-height:220px;overflow-y:auto">
+            <div style="padding:20px;text-align:center;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Run simulation to see asset impact</div>
+          </div>
+        </div>
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>📊 Risk Distribution</span></div>
+          <div class="mod-panel-body">
+            <div class="risk-dist-bars" id="riskDistBars" style="height:80px;align-items:flex-end;justify-content:space-around;display:flex;gap:4px"></div>
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:10px;line-height:1.6" id="riskSummaryText">Configure and run scenario to see risk distribution.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Timeline + Comparison -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0">
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>📅 Scenario Timeline Projection</span></div>
+          <div class="mod-panel-body">
+            <div class="timeline-track" id="scenarioTimeline">
+              <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Run simulation to generate timeline.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mod-panel">
+          <div class="mod-panel-hdr">
+            <span>⚖️ Scenario Comparison</span>
+            <button onclick="clearScenarioComparisons()" style="font-size:9px;background:none;border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace">Clear</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="scenario-compare" id="scenarioCompareTable">
+              <thead>
+                <tr>
+                  <th>Scenario</th><th>Portfolio Δ</th><th>Risk</th><th>Worst</th><th>Best</th>
+                </tr>
+              </thead>
+              <tbody id="scenarioCompareBody">
+                <tr><td colspan="5" style="padding:16px;text-align:center;color:var(--muted)">Run scenarios to compare</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

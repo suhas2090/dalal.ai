@@ -1,0 +1,118 @@
+<!-- ── GEMINI API KEY MODAL ── -->
+<div class="key-modal-overlay" id="keyModal" style="display:none">
+  <div class="key-modal">
+    <div class="key-modal-logo">DALAL.AI</div>
+    <div class="key-modal-title">Enter your Gemini API Key</div>
+    <div class="key-modal-sub">
+      Your key is stored only in your browser (localStorage).<br>
+      It is never sent anywhere except directly to Google's API.<br>
+      Get a free key at aistudio.google.com
+    </div>
+    <input type="password" id="keyInput" placeholder="AIzaSy..." autocomplete="off" />
+    <button class="key-modal-btn" onclick="saveGeminiKey()">SAVE &amp; CONTINUE</button>
+    <div class="key-modal-link">
+      <a href="https://aistudio.google.com/app/apikey" target="_blank">Get free API key at Google AI Studio →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     D.AI — FULL AGENT POPUP OVERLAY
+     Contains: search, data sources, welcome state,
+     loading steps, full research result renderer
+══════════════════════════════════════════════════════ -->
+<div class="dai-overlay" id="daiOverlay">
+  <div class="dai-popup">
+
+    <!-- Header -->
+    <div class="dai-popup-hdr">
+      <div>
+        <div class="dai-popup-title">D<span>.AI</span> — Market Intelligence Agent</div>
+        <div class="dai-popup-sub">NSE/BSE Research · Live Prices · Concall Digest · Macro Analysis · Competitor Comparison</div>
+      </div>
+      <button class="dai-close" onclick="closeDAI()" title="Back to Dashboard">✕</button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="dai-search-zone">
+      <div class="dai-search-wrapper">
+        <span class="dai-search-icon">◈</span>
+        <input type="text" id="daiSearchInput" class="dai-search-input"
+          placeholder="Ask anything: 'TCS research', 'Compare Infosys vs Wipro', 'How will oil prices affect ONGC?'"
+          onkeydown="if(event.key==='Enter') daiRunQuery(this.value)"
+        >
+      </div>
+      <div class="dai-hint-row">
+        <span>Try:</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('TCS research')">TCS research</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Infosys vs TCS vs Wipro comparison')">IT sector comparison</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('How will US recession affect Indian IT stocks?')">Macro impact on IT</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Reliance Industries Q3 concall analysis')">Reliance concall</span>
+        <span class="dai-hint-chip" onclick="daiRunQuery('Best midcap stocks India 2025')">Midcap screener</span>
+      </div>
+    </div>
+
+    <!-- Data Sources Bar -->
+    <div class="dai-sources">
+      <span class="dai-src-tag">BSE/NSE</span>
+      <span class="dai-src-tag">Yahoo Finance</span>
+      <span class="dai-src-tag">Concall Transcripts</span>
+      <span class="dai-src-tag">TradingView</span>
+      <span class="dai-src-tag">Screener.in</span>
+      <span class="dai-src-tag">Moneycontrol</span>
+      <span class="dai-src-tag">DRHP/Annual Reports</span>
+    </div>
+
+    <!-- Results Area -->
+    <div class="dai-results-area" id="daiResultsArea">
+
+      <!-- WELCOME STATE -->
+      <div class="dai-welcome" id="daiWelcomeState">
+        <div class="dai-welcome-emblem">📊</div>
+        <div class="dai-welcome-title">Your Indian Market Intelligence Agent</div>
+        <div class="dai-welcome-sub">Ask any question about NSE/BSE listed companies. Get comprehensive fundamental analysis, technical signals, competitor comparisons with live numbers, concall summaries, and macro impact assessment.</div>
+        <div class="dai-eq-grid">
+          <div class="dai-eq-card" onclick="daiRunQuery('TCS research')">
+            <div class="dai-eq-icon">🔍</div>
+            <strong>TCS research</strong>
+            <div class="dai-eq-text">Full fundamental + technical + competitor analysis</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('How will rising crude oil prices affect Indian markets?')">
+            <div class="dai-eq-icon">🛢️</div>
+            <strong>Crude oil impact</strong>
+            <div class="dai-eq-text">Macro event → sectoral winners & losers</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('Infosys vs TCS vs Wipro competitor comparison with financial data')">
+            <div class="dai-eq-icon">⚔️</div>
+            <strong>IT sector battle</strong>
+            <div class="dai-eq-text">Side-by-side financial metrics & valuation</div>
+          </div>
+          <div class="dai-eq-card" onclick="daiRunQuery('Sun Pharma concall key highlights and guidance')">
+            <div class="dai-eq-icon">📞</div>
+            <strong>Concall digest</strong>
+            <div class="dai-eq-text">Management guidance, key commentary & risks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div class="loading-state" id="daiLoadingState">
+        <div class="agent-thinking">
+          <div class="think-header">
+            <span class="think-icon">⟳</span>
+            <span class="think-label">DALAL.AI AGENT — GATHERING INTELLIGENCE</span>
+          </div>
+          <div class="think-steps" id="daiThinkSteps"></div>
+        </div>
+      </div>
+
+      <!-- RESULT CONTAINER -->
+      <div class="result-container" id="daiResultContainer" style="display:none"></div>
+
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="dai-disclaimer">⚠ For informational purposes only. Not SEBI-registered investment advice. Verify all data before making investment decisions.</div>
+
+  </div>
+</div>

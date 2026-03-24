@@ -1,0 +1,143 @@
+     SUPPLY CHAIN RISK MAPPING OVERLAY
+══════════════════════════════════════════════════════ -->
+<div class="module-overlay supplychain-overlay" id="supplychainOverlay">
+  <div class="module-hdr">
+    <div class="module-hdr-left">
+      <div class="module-title">🔗 <span>Supply Chain</span> Risk Map</div>
+      <div class="module-sub">Dependency graph · Concentration risk · Geopolitical exposure · Cascading risk detection</div>
+    </div>
+    <button class="module-close" onclick="closeSupplyChain()" title="Close">✕</button>
+  </div>
+
+  <div class="module-body">
+    <div class="module-sidebar">
+      <div>
+        <div class="mod-label">Select Company</div>
+        <div class="sc-company-filter" id="scCompanyFilter">
+          <button class="sc-co-chip active" onclick="scSelectCompany('RELIANCE',this)">Reliance</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('TCS',this)">TCS</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('MARUTI',this)">Maruti</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('SUNPHARMA',this)">Sun Pharma</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('TATASTEEL',this)">Tata Steel</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('HDFCBANK',this)">HDFC Bank</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('ONGC',this)">ONGC</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('INFY',this)">Infosys</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('WIPRO',this)">Wipro</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('HINDALCO',this)">Hindalco</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('TATAmotors',this)">Tata Motors</button>
+          <button class="sc-co-chip" onclick="scSelectCompany('ULTRACEMCO',this)">UltraTech</button>
+        </div>
+      </div>
+      <div>
+        <div class="mod-label">Risk Filters</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">⚠️ Min Alert Threshold</span>
+              <span class="sim-slider-val" id="sv-riskThresh">30</span>
+            </div>
+            <input type="range" class="sim-range red" min="0" max="100" step="5" value="30" id="sl-riskThresh" oninput="document.getElementById('sv-riskThresh').textContent=this.value;scRefreshAlerts()">
+          </div>
+          <div class="sim-slider-row">
+            <div class="sim-slider-top">
+              <span class="sim-slider-label">🌍 Geopolitical Weight</span>
+              <span class="sim-slider-val" id="sv-geoWeight">50%</span>
+            </div>
+            <input type="range" class="sim-range purple" min="0" max="100" step="10" value="50" id="sl-geoWeight" oninput="simUpdateSlider('geoWeight',this.value,'%');scRefreshAlerts()">
+          </div>
+        </div>
+      </div>
+      <button class="run-btn cyan" onclick="scRunAnalysis()">🔍 ANALYSE SUPPLY CHAIN</button>
+      <div class="mod-panel">
+        <div class="mod-panel-hdr"><span>📋 Key Metrics</span></div>
+        <div class="mod-panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:3px">OVERALL RISK SCORE</div>
+            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text)" id="scOverallScore">—</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--ink);padding:8px;border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace">SUPPLIERS</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;margin-top:3px" id="scSupplierCount">—</div>
+            </div>
+            <div style="background:var(--ink);padding:8px;border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace">CRITICAL</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;margin-top:3px;color:var(--red)" id="scCriticalCount">—</div>
+            </div>
+            <div style="background:var(--ink);padding:8px;border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace">REGIONS</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;margin-top:3px" id="scRegionCount">—</div>
+            </div>
+            <div style="background:var(--ink);padding:8px;border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace">ALERTS</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;margin-top:3px;color:var(--gold)" id="scAlertCount">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="module-main">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;flex-shrink:0">
+        <div class="mod-panel">
+          <div class="mod-panel-hdr">
+            <span>🕸️ Supply Chain Network Graph</span>
+            <div class="sc-node-legend" style="flex-wrap:wrap">
+              <div class="sc-legend-item"><div class="sc-legend-dot" style="background:#00BCD4"></div>Company</div>
+              <div class="sc-legend-item"><div class="sc-legend-dot" style="background:var(--saffron)"></div>T1</div>
+              <div class="sc-legend-item"><div class="sc-legend-dot" style="background:var(--gold)"></div>T2</div>
+              <div class="sc-legend-item"><div class="sc-legend-dot" style="background:var(--red)"></div>High Risk</div>
+            </div>
+          </div>
+          <div class="mod-panel-body" style="padding:10px">
+            <canvas id="scNetworkCanvas" height="260"></canvas>
+          </div>
+        </div>
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>🌍 Geographic Risk Heatmap</span></div>
+          <div class="mod-panel-body" style="padding:12px">
+            <div class="geo-heatmap-grid" id="geoHeatmap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0">
+        <div class="mod-panel">
+          <div class="mod-panel-hdr">
+            <span>🚨 High-Risk Dependency Alerts</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--red);animation:blink 1.5s infinite">● LIVE</span>
+          </div>
+          <div class="mod-panel-body" style="padding:12px;max-height:200px;overflow-y:auto" id="scAlertsList">
+            <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Analyse a company to see alerts.</div>
+          </div>
+        </div>
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>🏭 Supplier Risk Scores</span></div>
+          <div style="max-height:200px;overflow-y:auto" id="scRiskScores">
+            <div style="padding:16px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Select and analyse a company.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0">
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>🌳 Supply Dependency Tree</span></div>
+          <div class="mod-panel-body" style="max-height:240px;overflow-y:auto">
+            <div class="dep-tree" id="scDepTree">
+              <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Analyse a company to see dependency tree.</div>
+            </div>
+          </div>
+        </div>
+        <div class="mod-panel">
+          <div class="mod-panel-hdr"><span>💥 Disruption Impact Analysis</span></div>
+          <div class="mod-panel-body" style="max-height:240px;overflow-y:auto">
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px">If key supplier region is disrupted:</div>
+            <div id="scDisruptionAnalysis" style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Analyse a company to see disruption impact.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
