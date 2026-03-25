@@ -656,7 +656,7 @@ async function daiRunQuery(query) {
   }
   document.getElementById(`daistep${AGENT_STEPS.length-1}`).classList.add('done');
 
-  const result = await callClaudeAgent(query, liveData);
+  const result = await callDAIAgent(query, liveData);
   loadingEl.classList.remove('show');
 
   const rc = document.getElementById('daiResultContainer');
@@ -668,7 +668,7 @@ async function daiRunQuery(query) {
 }
 
 
-async function callClaudeAgent(query, liveData) {
+async function callDAIAgent(query, liveData) {
 
   // Build live price context to inject into prompt
   const livePriceContext = liveData
@@ -795,15 +795,15 @@ CRITICAL RULES:
 5. Start your response with { and end with } — nothing else`;
 
   try {
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
-    const response = await fetch(GEMINI_URL, {
+    const provider = /\bdbt\b/i.test(query) ? 'groq' : 'gemini';
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: systemPrompt + '\n\n' + livePriceContext + '\n\nUser Query: ' + query }]
-        }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 4000 }
+        provider,
+        prompt: systemPrompt + '\n\n' + livePriceContext + '\n\nUser Query: ' + query,
+        geminiKey: CONFIG.GEMINI_API_KEY || undefined,
+        groqKey: CONFIG.GROQ_API_KEY || undefined
       })
     });
     if (!response.ok) {
@@ -815,7 +815,7 @@ CRITICAL RULES:
     const data = await response.json();
 
     // Extract raw text from Gemini response structure
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const raw = data.text || data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // ── ROBUST JSON EXTRACTION ──
     // Gemini sometimes wraps in markdown fences or adds extra text.
@@ -836,23 +836,8 @@ CRITICAL RULES:
     try {
       parsed = JSON.parse(clean);
     } catch(jsonErr) {
-      // Gemini occasionally returns truncated JSON — auto-retry once
-      console.warn('JSON parse failed, auto-retrying once...', jsonErr.message);
-      await new Promise(r => setTimeout(r, 1500)); // wait 1.5s before retry
-      const retryRes = await fetch(GEMINI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemPrompt + '\n\n' + livePriceContext + '\n\nUser Query: ' + query }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 4000 }
-        })
-      });
-      if (!retryRes.ok) throw new Error('Retry also failed: HTTP ' + retryRes.status);
-      const retryData = await retryRes.json();
-      const retryRaw = retryData.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-      const retryClean = retryRaw.replace(/```json/g,'').replace(/```/g,'').trim();
-      const f1 = retryClean.indexOf('{'), l1 = retryClean.lastIndexOf('}');
-      parsed = JSON.parse(f1 !== -1 && l1 > f1 ? retryClean.substring(f1, l1+1) : retryClean);
+      console.warn('AI JSON parse failed:', jsonErr.message);
+      throw new Error('AI JSON parsing failed once; please retry query.');
     }
     return renderResult(parsed, query);
 
@@ -1229,8 +1214,8 @@ function loadGeminiKey() {
     document.getElementById('keyModal').style.display = 'none';
     return true;
   }
-  // Show modal
-  document.getElementById('keyModal').style.display = 'flex';
+  // Vercel/server env flow: no browser key needed unless user wants override.
+  document.getElementById('keyModal').style.display = 'none';
   return false;
 }
 
@@ -1273,81 +1258,77 @@ document.getElementById('daiOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeDAI();
 });
 
-// ── TRADINGVIEW CHART ──
-let currentChartSymbol = 'NSE:NIFTY';
+// ── OPEN-SOURCE CHART (Lightweight Charts + Yahoo data via Vercel API) ──
+let currentChartSymbol = '^NSEI';
 let currentChartTF     = '1D';
 let currentChartStyle  = '3'; // 3=line, 1=candles
 let currentStockExchange = 'NSE';
+let lwChart, lwSeries, lwLoaded = false;
 
-const TV_TF_MAP = { '1D':'D', '1W':'W', '1M':'M', '6M':'6M', '12M':'12M' };
+const CHART_RANGE_MAP = { '1D':'1d', '1W':'5d', '1M':'1mo', '6M':'6mo', '12M':'1y' };
 
-function injectTVScript(container, src, config) {
-  container.innerHTML = '';
-  const host = document.createElement('div');
-  host.className = 'tradingview-widget-container';
-  host.style.height = '100%';
-  host.style.width = '100%';
-  const widget = document.createElement('div');
-  widget.className = 'tradingview-widget-container__widget';
-  widget.style.height = '100%';
-  widget.style.width = '100%';
-  host.appendChild(widget);
-  const script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.async = true;
-  script.src = src;
-  script.text = JSON.stringify(config);
-  host.appendChild(script);
-  container.appendChild(host);
+async function ensureLightweightCharts() {
+  if (window.LightweightCharts) return true;
+  if (lwLoaded) return false;
+  lwLoaded = true;
+  await new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js';
+    sc.onload = resolve;
+    sc.onerror = reject;
+    document.head.appendChild(sc);
+  });
+  return !!window.LightweightCharts;
 }
 
-function renderChart() {
+async function fetchChartData(symbol, tf) {
+  const range = CHART_RANGE_MAP[tf] || '1mo';
+  const url = `/api/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Chart data unavailable');
+  return await res.json();
+}
+
+function resetChartWrap(msg) {
+  const wrap = document.getElementById('chartWidgetWrap');
+  if (!wrap) return null;
+  wrap.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:11px">${msg}</div>`;
+  return wrap;
+}
+
+async function renderChart() {
   const wrap = document.getElementById('chartWidgetWrap');
   if (!wrap) return;
+  resetChartWrap('Loading chart…');
 
-  if (currentChartSymbol === 'HEATMAP:INDIA') {
-    injectTVScript(
-      wrap,
-      'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
-      {
-        dataSource: 'NSE',
-        blockSize: 'market_cap_basic',
-        blockColor: 'change',
-        grouping: 'sector',
-        locale: 'en',
-        symbolUrl: '',
-        colorTheme: 'dark',
-        hasTopBar: true,
-        isDataSetEnabled: true,
-        isZoomEnabled: true,
-        hasSymbolTooltip: true,
-        width: '100%',
-        height: '100%'
-      }
-    );
-    return;
+  try {
+    await ensureLightweightCharts();
+    if (!window.LightweightCharts) throw new Error('Chart library failed');
+
+    const payload = await fetchChartData(currentChartSymbol, currentChartTF);
+    const points = payload.points || [];
+    if (!points.length) throw new Error('No chart points');
+
+    wrap.innerHTML = '<div id="lwChartHost" style="width:100%;height:100%"></div>';
+    const host = document.getElementById('lwChartHost');
+    lwChart = LightweightCharts.createChart(host, {
+      layout: { background: { color: 'transparent' }, textColor: getComputedStyle(document.body).getPropertyValue('--muted') },
+      grid: { vertLines: { color: 'rgba(100,100,130,0.2)' }, horzLines: { color: 'rgba(100,100,130,0.2)' } },
+      rightPriceScale: { borderColor: 'rgba(100,100,130,0.2)' },
+      timeScale: { borderColor: 'rgba(100,100,130,0.2)' },
+      width: host.clientWidth,
+      height: host.clientHeight,
+    });
+    lwSeries = currentChartStyle === '1'
+      ? lwChart.addCandlestickSeries({ upColor:'#00C853', downColor:'#FF1744', borderVisible:false, wickUpColor:'#00C853', wickDownColor:'#FF1744' })
+      : lwChart.addLineSeries({ color:'#FF6B00', lineWidth:2 });
+
+    lwSeries.setData(currentChartStyle === '1' ? points.map(p => ({ time:p.time, open:p.open, high:p.high, low:p.low, close:p.close })) : points.map(p => ({ time:p.time, value:p.close })));
+    window.addEventListener('resize', () => lwChart && lwChart.applyOptions({ width: host.clientWidth, height: host.clientHeight }));
+  } catch (e) {
+    resetChartWrap('Chart unavailable. Try another symbol.');
+    console.warn('Chart render failed:', e.message);
   }
-
-  injectTVScript(
-    wrap,
-    'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
-    {
-      autosize: true,
-      symbol: currentChartSymbol,
-      interval: TV_TF_MAP[currentChartTF] || 'D',
-      timezone: 'Asia/Kolkata',
-      theme: 'dark',
-      style: currentChartStyle,
-      locale: 'en',
-      allow_symbol_change: false,
-      hide_side_toolbar: false,
-      hide_top_toolbar: false,
-      withdateranges: true,
-      save_image: false,
-      calendar: false,
-      support_host: 'https://www.tradingview.com'
-    }
-  );
 }
 
 function switchChart(symbol, tabEl) {
@@ -1392,7 +1373,7 @@ function loadStockChart() {
     return;
   }
 
-  currentChartSymbol = `${currentStockExchange}:${cleaned}`;
+  currentChartSymbol = currentStockExchange === 'NSE' ? `${cleaned}.NS` : `${cleaned}.BO`;
   renderChart();
 
   document.querySelectorAll('.ci-tab').forEach(t => t.classList.remove('active'));
@@ -1400,6 +1381,21 @@ function loadStockChart() {
 }
 
 renderChart();
+
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  localStorage.setItem('dalal_theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+(function initTheme(){
+  const saved = localStorage.getItem('dalal_theme');
+  if (saved === 'light') document.body.classList.add('light');
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+})();
 
 // ── MARKET MOOD INDEX — fetch via Worker ?mmi=1 ──
 async function fetchMMI() {
