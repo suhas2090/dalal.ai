@@ -15,6 +15,27 @@
     --accent: #FF6B00;
   }
 
+
+  body.light {
+    --ink: #f5f7fb;
+    --surface: #ffffff;
+    --panel: #f0f3fa;
+    --border: #d7deef;
+    --text: #111827;
+    --muted: #4b5563;
+    --saffron-dim: #ff6b0015;
+  }
+
+  .theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    border-radius: 18px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {

@@ -186,3 +186,10 @@ VIX:         ^VIX (US VIX used as proxy — India VIX not on Yahoo free)
 ---
 
 Now help me build: **[DESCRIBE WHAT YOU WANT TO ADD/CHANGE]**
+
+## 2026 Update: Vercel deployment + server-side keys
+
+- Added `api/ai.js` proxy route so Gemini/Groq keys can be stored in Vercel environment variables (`GEMINI_API_KEY`, `GROQ_API_KEY`) instead of browser localStorage.
+- Added `api/chart.js` route to proxy Yahoo Finance OHLC data for the open-source chart panel.
+- Frontend D.AI defaults to Gemini and auto-routes `dbt` queries to Groq.
+- Added `cloudflare-worker.js` fixed version for MMI + FII/DII parsing (number/date compatibility).
