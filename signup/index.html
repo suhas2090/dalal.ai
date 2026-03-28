@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DALAL.AI | Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+<body class="signup-page">
+  <main class="signup-shell">
+    <a class="back-link" href="/homepage">← Back to homepage</a>
+    <section class="signup-card">
+      <h1>Create your DALAL.AI account</h1>
+      <p>Choose your preferred signup method.</p>
+
+      <div class="signup-options">
+        <button class="landing-btn primary" onclick="window.location.href='/dashboard'">Sign up with Google</button>
+
+        <div class="divider"><span>or</span></div>
+
+        <form class="email-signup" onsubmit="event.preventDefault(); window.location.href='/dashboard';">
+          <label for="email">Sign up with Email ID</label>
+          <input id="email" type="email" placeholder="you@example.com" required />
+          <button class="landing-btn secondary" type="submit">Sign up with Email</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

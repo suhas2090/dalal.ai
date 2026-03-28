@@ -14,6 +14,6 @@
   }
 
   const appScript = document.createElement('script');
-  appScript.src = 'assets/js/script.js';
+  appScript.src = '/assets/js/script.js';
   document.body.appendChild(appScript);
 })();
