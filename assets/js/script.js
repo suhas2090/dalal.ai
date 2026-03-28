@@ -112,6 +112,33 @@ async function workerFetch(symbols) {
   }
 }
 
+// ── FALLBACK: direct Yahoo Finance API (used when worker is unavailable) ──
+async function yahooDirectFetch(symbols) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(url, { signal: ctrl.signal, mode: 'cors' });
+    clearTimeout(timer);
+    if (!res.ok) { console.warn('Yahoo fallback HTTP', res.status); return {}; }
+
+    const json = await res.json();
+    const quotes = json?.quoteResponse?.result || [];
+    const out = {};
+    for (const q of quotes) {
+      const sym = q?.symbol;
+      const price = Number(q?.regularMarketPrice);
+      const chgAmt = Number(q?.regularMarketChange);
+      const chgPct = Number(q?.regularMarketChangePercent);
+      if (!sym || !Number.isFinite(price) || !Number.isFinite(chgAmt) || !Number.isFinite(chgPct)) continue;
+      out[sym] = { price, chgAmt, chgPct };
+    }
+    return out;
+  } catch (e) {
+    console.warn('Yahoo fallback failed:', e.message);
+    return {};
+  }
+}
 
 // ── SYMBOL LISTS ──
 // Yahoo Finance format: NSE stocks = "TCS.NS", indices = "^NSEI", forex = "USDINR=X"
@@ -393,11 +420,16 @@ async function refreshAllLiveData() {
   const indexSyms = Object.keys(SYMBOLS.indices);
   const macroSyms = Object.keys(SYMBOLS.macro);
 
-  const [stockRaw, indexRaw, macroRaw] = await Promise.all([
+  let [stockRaw, indexRaw, macroRaw] = await Promise.all([
     workerFetch(stockSyms),
     workerFetch(indexSyms),
     workerFetch(macroSyms),
   ]);
+
+  // Worker may fail in some deployments (DNS/CORS/rate-limits). Fallback keeps dashboard alive.
+  if (!Object.keys(stockRaw || {}).length) stockRaw = await yahooDirectFetch(stockSyms);
+  if (!Object.keys(indexRaw || {}).length) indexRaw = await yahooDirectFetch(indexSyms);
+  if (!Object.keys(macroRaw || {}).length) macroRaw = await yahooDirectFetch(macroSyms);
 
   applyToUI(stockRaw,  'stocks');
   applyToUI(indexRaw,  'indices');
