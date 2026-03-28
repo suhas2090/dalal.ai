@@ -112,6 +112,34 @@ async function workerFetch(symbols) {
   }
 }
 
+// ── FALLBACK: direct Yahoo Finance API (used when worker is unavailable) ──
+async function yahooDirectFetch(symbols) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(url, { signal: ctrl.signal, mode: 'cors' });
+    clearTimeout(timer);
+    if (!res.ok) { console.warn('Yahoo fallback HTTP', res.status); return {}; }
+
+    const json = await res.json();
+    const quotes = json?.quoteResponse?.result || [];
+    const out = {};
+    for (const q of quotes) {
+      const sym = q?.symbol;
+      const price = Number(q?.regularMarketPrice);
+      const chgAmt = Number(q?.regularMarketChange);
+      const chgPct = Number(q?.regularMarketChangePercent);
+      if (!sym || !Number.isFinite(price) || !Number.isFinite(chgAmt) || !Number.isFinite(chgPct)) continue;
+      out[sym] = { price, chgAmt, chgPct };
+    }
+    return out;
+  } catch (e) {
+    console.warn('Yahoo fallback failed:', e.message);
+    return {};
+  }
+}
+
 // ── SYMBOL LISTS ──
 // Yahoo Finance format: NSE stocks = "TCS.NS", indices = "^NSEI", forex = "USDINR=X"
 const SYMBOLS = {
@@ -379,8 +407,11 @@ async function refreshAllLiveData() {
   // Check worker URL is configured
   if (!WORKER_URL || WORKER_URL.includes('YOUR-WORKER-URL')) {
     console.warn('Worker URL not configured — prices will not load. See CONFIG block.');
-    document.getElementById('tickerInner').innerHTML =
-      `<div class="tick-item"><span class="tick-name" style="color:var(--red)">⚠ Set WORKER_URL in CONFIG</span></div>`.repeat(3);
+    const tickerEl = document.getElementById('tickerInner');
+    if (tickerEl) {
+      tickerEl.innerHTML =
+        `<div class="tick-item"><span class="tick-name" style="color:var(--red)">⚠ Set WORKER_URL in CONFIG</span></div>`.repeat(3);
+    }
     return;
   }
 
@@ -389,11 +420,16 @@ async function refreshAllLiveData() {
   const indexSyms = Object.keys(SYMBOLS.indices);
   const macroSyms = Object.keys(SYMBOLS.macro);
 
-  const [stockRaw, indexRaw, macroRaw] = await Promise.all([
+  let [stockRaw, indexRaw, macroRaw] = await Promise.all([
     workerFetch(stockSyms),
     workerFetch(indexSyms),
     workerFetch(macroSyms),
   ]);
+
+  // Worker may fail in some deployments (DNS/CORS/rate-limits). Fallback keeps dashboard alive.
+  if (!Object.keys(stockRaw || {}).length) stockRaw = await yahooDirectFetch(stockSyms);
+  if (!Object.keys(indexRaw || {}).length) indexRaw = await yahooDirectFetch(indexSyms);
+  if (!Object.keys(macroRaw || {}).length) macroRaw = await yahooDirectFetch(macroSyms);
 
   applyToUI(stockRaw,  'stocks');
   applyToUI(indexRaw,  'indices');
@@ -407,8 +443,13 @@ async function refreshAllLiveData() {
 }
 
 // Show loading placeholder in ticker immediately
-document.getElementById('tickerInner').innerHTML =
-  Array(10).fill(`<div class="tick-item"><span class="tick-name" style="color:var(--muted)">loading\u2026</span></div>`).join('');
+{
+  const tickerEl = document.getElementById('tickerInner');
+  if (tickerEl) {
+    tickerEl.innerHTML =
+      Array(10).fill(`<div class="tick-item"><span class="tick-name" style="color:var(--muted)">loading\u2026</span></div>`).join('');
+  }
+}
 
 // ── IST CLOCK — market-hours aware ──
 function updateClock() {
