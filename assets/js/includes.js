@@ -14,6 +14,7 @@
   }
 
   const appScript = document.createElement('script');
-  appScript.src = 'assets/js/script.js';
+  const includesScriptUrl = new URL((document.currentScript && document.currentScript.src) || 'includes.js', window.location.href);
+  appScript.src = new URL('script.js', includesScriptUrl).toString();
   document.body.appendChild(appScript);
 })();
