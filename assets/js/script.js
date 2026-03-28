@@ -99,7 +99,7 @@ const priceCache = {};
 // ── CORE: fetch batch of symbols via Cloudflare Worker ──
 async function workerFetch(symbols) {
   try {
-    const url = `${WORKER_URL}?symbols=${symbols.join(',')}`;
+    const url = `${WORKER_URL}?symbols=${encodeURIComponent(symbols.join(','))}`;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
     const res = await fetch(url, { signal: ctrl.signal });
@@ -111,6 +111,7 @@ async function workerFetch(symbols) {
     return {};
   }
 }
+
 
 // ── SYMBOL LISTS ──
 // Yahoo Finance format: NSE stocks = "TCS.NS", indices = "^NSEI", forex = "USDINR=X"
@@ -379,8 +380,11 @@ async function refreshAllLiveData() {
   // Check worker URL is configured
   if (!WORKER_URL || WORKER_URL.includes('YOUR-WORKER-URL')) {
     console.warn('Worker URL not configured — prices will not load. See CONFIG block.');
-    document.getElementById('tickerInner').innerHTML =
-      `<div class="tick-item"><span class="tick-name" style="color:var(--red)">⚠ Set WORKER_URL in CONFIG</span></div>`.repeat(3);
+    const tickerEl = document.getElementById('tickerInner');
+    if (tickerEl) {
+      tickerEl.innerHTML =
+        `<div class="tick-item"><span class="tick-name" style="color:var(--red)">⚠ Set WORKER_URL in CONFIG</span></div>`.repeat(3);
+    }
     return;
   }
 
@@ -407,8 +411,13 @@ async function refreshAllLiveData() {
 }
 
 // Show loading placeholder in ticker immediately
-document.getElementById('tickerInner').innerHTML =
-  Array(10).fill(`<div class="tick-item"><span class="tick-name" style="color:var(--muted)">loading\u2026</span></div>`).join('');
+{
+  const tickerEl = document.getElementById('tickerInner');
+  if (tickerEl) {
+    tickerEl.innerHTML =
+      Array(10).fill(`<div class="tick-item"><span class="tick-name" style="color:var(--muted)">loading\u2026</span></div>`).join('');
+  }
+}
 
 // ── IST CLOCK — market-hours aware ──
 function updateClock() {
