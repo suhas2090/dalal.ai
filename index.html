@@ -3,24 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DALAL.AI — Dashboard</title>
+  <title>DALAL.AI | Homepage</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
-<body class="dashboard-page">
-  <div data-include="components/gemini-modal.html"></div>
-  <div data-include="components/header.html"></div>
-  <div data-include="components/floating-dock.html"></div>
-  <main>
-    <div data-include="components/dashboard.html"></div>
-  </main>
-  <div data-include="components/globe-overlay.html"></div>
-  <div data-include="components/scenario-overlay.html"></div>
-  <div data-include="components/supply-chain-overlay.html"></div>
-  <div data-include="components/groq-modal.html"></div>
+<body class="landing-page">
+  <div class="landing-orb orb-one" aria-hidden="true"></div>
+  <div class="landing-orb orb-two" aria-hidden="true"></div>
+  <div class="landing-orb orb-three" aria-hidden="true"></div>
+  <main class="landing-shell">
+    <section class="landing-brand">
+      <div class="brand-logo-mark">◈</div>
+      <div>
+        <p class="brand-kicker">premium intelligence terminal</p>
+        <h2>DALAL<span>.AI</span></h2>
+      </div>
+    </section>
 
-  <script src="assets/js/includes.js"></script>
+    <section class="landing-hero">
+      <p class="landing-tag">Realtime market command center for India</p>
+      <h1>
+        Trade with<br>
+        <span>clarity, speed, and conviction</span>
+      </h1>
+      <p class="landing-copy">
+        DALAL.AI combines AI insight, live market breadth, macro context, and scenario simulation into one premium workspace built for modern operators.
+      </p>
+      <div class="hero-kpis">
+        <article><h3>15+</h3><p>live market modules</p></article>
+        <article><h3>5 min</h3><p>intelligence refresh cycle</p></article>
+        <article><h3>24×7</h3><p>signal monitoring stack</p></article>
+      </div>
+      <div class="landing-actions">
+        <a class="landing-btn primary" href="signup/">Start Premium Access</a>
+        <a class="landing-btn secondary" href="dashboard/">Launch Dashboard</a>
+      </div>
+    </section>
+
+    <section class="landing-highlights">
+      <div class="highlight-card floating-delay-1"><div class="highlight-icon">✦</div><h3>Live Conviction Layer</h3><p>Track NIFTY, SENSEX, sectors, volatility, and momentum in a single signal loop.</p></div>
+      <div class="highlight-card floating-delay-2"><div class="highlight-icon">⚡</div><h3>AI Research Engine</h3><p>Generate structured insights for stocks, macro moves, and portfolio risk in seconds.</p></div>
+      <div class="highlight-card floating-delay-3"><div class="highlight-icon">◎</div><h3>Context-Aware Feed</h3><p>Read only what matters with filtered market updates, alerts, and tactical watchlists.</p></div>
+    </section>
+
+    <section class="feature-showreel">
+      <div class="showreel-head">
+        <p>Feature snapshots</p>
+        <h2>Premium modules in one seamless flow</h2>
+      </div>
+      <div class="feature-slider">
+        <div class="feature-track">
+          <article class="feature-slide"><div class="feature-visual visual-a"></div><h3>Signal Grid</h3><p>Live pulse tiles for sectors, volatility, and market breadth with quick visual hierarchy.</p></article>
+          <article class="feature-slide"><div class="feature-visual visual-b"></div><h3>AI Research Desk</h3><p>Structured insight cards for stock breakdowns, news context, and tactical decision notes.</p></article>
+          <article class="feature-slide"><div class="feature-visual visual-c"></div><h3>Macro Radar</h3><p>Track CPI, yields, FX, and commodity shocks in a single premium macro overview panel.</p></article>
+          <article class="feature-slide"><div class="feature-visual visual-d"></div><h3>Command Watchlist</h3><p>Pin high-conviction names and monitor trend breaks with glanceable state colors.</p></article>
+          <article class="feature-slide" aria-hidden="true"><div class="feature-visual visual-a"></div><h3>Signal Grid</h3><p>Live pulse tiles for sectors, volatility, and market breadth with quick visual hierarchy.</p></article>
+          <article class="feature-slide" aria-hidden="true"><div class="feature-visual visual-b"></div><h3>AI Research Desk</h3><p>Structured insight cards for stock breakdowns, news context, and tactical decision notes.</p></article>
+          <article class="feature-slide" aria-hidden="true"><div class="feature-visual visual-c"></div><h3>Macro Radar</h3><p>Track CPI, yields, FX, and commodity shocks in a single premium macro overview panel.</p></article>
+          <article class="feature-slide" aria-hidden="true"><div class="feature-visual visual-d"></div><h3>Command Watchlist</h3><p>Pin high-conviction names and monitor trend breaks with glanceable state colors.</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
