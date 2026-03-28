@@ -11,6 +11,8 @@ export default {
 
     const url = new URL(request.url);
     const p = url.searchParams;
+    const symbolsParam = p.get('symbols');
+    if (symbolsParam) return handleSymbols(symbolsParam, corsHeaders);
     if (p.get('fiidii') === '1') return handleFIIDII(corsHeaders);
     if (p.get('mmi') === '1') return handleMMI(corsHeaders);
     return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
@@ -22,6 +24,53 @@ const num = (v) => {
   const n = parseFloat(String(v).replace(/,/g, ''));
   return Number.isFinite(n) ? n : null;
 };
+
+async function handleSymbols(symbolsParam, corsHeaders) {
+  try {
+    const symbols = symbolsParam.split(',').map(s => s.trim()).filter(Boolean);
+    if (!symbols.length) {
+      return new Response(JSON.stringify({ error: 'No symbols provided' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    const quoteUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
+    const r = await fetch(quoteUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+      cf: { cacheTtl: 20, cacheEverything: true },
+    });
+
+    if (!r.ok) {
+      return new Response(JSON.stringify({ error: `Yahoo quote HTTP ${r.status}` }), {
+        status: 502,
+        headers: corsHeaders,
+      });
+    }
+
+    const data = await r.json();
+    const out = {};
+    const quotes = data?.quoteResponse?.result || [];
+
+    for (const q of quotes) {
+      const sym = q?.symbol;
+      const price = num(q?.regularMarketPrice);
+      const chgAmt = num(q?.regularMarketChange);
+      const chgPct = num(q?.regularMarketChangePercent);
+      if (!sym || price === null || chgAmt === null || chgPct === null) continue;
+      out[sym] = { price, chgAmt, chgPct };
+    }
+
+    return new Response(JSON.stringify(out), {
+      headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=20' },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: `symbols handler failed: ${e.message}` }), {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+}
 
 async function handleFIIDII(corsHeaders) {
   const endpoints = [
