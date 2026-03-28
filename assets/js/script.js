@@ -99,7 +99,7 @@ const priceCache = {};
 // ── CORE: fetch batch of symbols via Cloudflare Worker ──
 async function workerFetch(symbols) {
   try {
-    const url = `${WORKER_URL}?symbols=${symbols.join(',')}`;
+    const url = `${WORKER_URL}?symbols=${encodeURIComponent(symbols.join(','))}`;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
     const res = await fetch(url, { signal: ctrl.signal });
