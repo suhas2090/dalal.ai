@@ -1796,21 +1796,16 @@
     radial-gradient(circle at 80% 35%, rgba(124, 92, 252, 0.24), transparent 42%),
     radial-gradient(circle at 60% 92%, rgba(0, 200, 83, 0.14), transparent 48%),
     linear-gradient(180deg, #05060e 0%, #070b14 56%, #0a0f1c 100%);
-  background-size: 120% 120%, 130% 130%, 140% 140%, 100% 100%;
-  background-attachment: fixed;
-  animation: ambientGradientShift 28s ease-in-out infinite;
   color: #f2f6ff;
   font-family: 'Noto Sans', system-ui, sans-serif;
   position: relative;
 }
 
-@keyframes ambientGradientShift {
-  0%, 100% {
-    background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
-  }
-  50% {
-    background-position: 10% 8%, 92% 12%, 48% 88%, 0% 0%;
-  }
+.dashboard-page {
+  background:
+    radial-gradient(circle at 18% -12%, rgba(255, 107, 0, 0.12), transparent 32%),
+    radial-gradient(circle at 92% 8%, rgba(124, 92, 252, 0.12), transparent 34%),
+    var(--ink);
 }
 
 .landing-orb {
@@ -2338,13 +2333,5 @@
   .landing-brand {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-page,
-  .signup-page,
-  .dashboard-page {
-    animation: none;
   }
 }
