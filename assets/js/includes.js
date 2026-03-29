@@ -61,7 +61,6 @@
   }
   
   const appScript = document.createElement('script');
-  const includesScriptUrl = new URL((document.currentScript && document.currentScript.src) || 'includes.js', window.location.href);
   
   // Same fix for script.js path
   let scriptPath = new URL('script.js', includesScriptUrl).toString();
