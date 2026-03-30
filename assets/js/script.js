@@ -389,6 +389,94 @@ async function fetchFIIDII() {
   } catch(e) { console.warn('FII/DII fetch error:', e.message); }
 }
 
+function macroClassFromStatus(status) {
+  if (status === 'green') return 'macro-health-green';
+  if (status === 'red') return 'macro-health-red';
+  return 'macro-health-yellow';
+}
+
+function fmtMacroValue(val) {
+  if (val === null || val === undefined || Number.isNaN(Number(val))) return '—';
+  return Number(val).toFixed(2);
+}
+
+function updateMacroHealthUI(data) {
+  const badge = document.getElementById('macro-health-badge');
+  const score = document.getElementById('macro-health-score');
+  const signal = document.getElementById('macro-health-signal');
+  const updated = document.getElementById('macro-health-updated');
+  const cards = document.getElementById('macro-health-cards');
+  const alerts = document.getElementById('macro-health-alerts');
+  const action = document.getElementById('macro-trader-action');
+  const sectors = document.getElementById('macro-sector-list');
+
+  if (!badge || !score || !signal || !updated || !cards || !alerts || !action || !sectors) return;
+
+  const badgeState = (data.healthBadge || 'yellow').toLowerCase();
+  badge.classList.remove('macro-health-green', 'macro-health-yellow', 'macro-health-red');
+  badge.classList.add(macroClassFromStatus(badgeState));
+  badge.textContent = (badgeState === 'green' ? 'HEALTHY' : badgeState === 'red' ? 'WARNING' : 'CAUTION');
+
+  const scoreVal = Number(data.economicHealthScore);
+  score.textContent = Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—';
+
+  signal.textContent = data.traderSignal || 'CAUTION';
+  signal.style.color =
+    data.traderSignal === 'BULLISH' ? 'var(--green)'
+      : data.traderSignal === 'BEARISH' ? 'var(--red)'
+        : 'var(--gold)';
+
+  const istTime = data.lastUpdated
+    ? new Date(data.lastUpdated).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+  updated.textContent = `updated ${istTime ? `${istTime} IST` : '—'}`;
+
+  const indicatorEntries = Object.values(data.indicators || {});
+  cards.innerHTML = indicatorEntries.map((item) => {
+    const cls = macroClassFromStatus(item.status);
+    const trendIcon = item.trend === 'up' ? '▲' : item.trend === 'down' ? '▼' : '•';
+    return `<div class="macro-health-card ${cls}">
+      <div class="mh-name">${item.label || 'Indicator'}</div>
+      <div class="mh-value">${fmtMacroValue(item.value)} ${trendIcon}</div>
+      <div class="mh-date">${item.date || '—'}</div>
+    </div>`;
+  }).join('');
+
+  action.textContent = data.traderActionRecommendation || 'No recommendation available.';
+
+  const alertList = Array.isArray(data.alerts) ? data.alerts : [];
+  alerts.innerHTML = alertList.length
+    ? alertList.slice(0, 4).map((a) =>
+      `<div class="macro-health-alert ${a.severity === 'warning' ? 'macro-health-alert-warning' : 'macro-health-alert-caution'}">${a.message}</div>`
+    ).join('')
+    : '<div class="macro-health-alert macro-health-alert-neutral">No macro warnings right now.</div>';
+
+  const s = data.sectorImpact || {};
+  sectors.innerHTML = `
+    <div class="macro-sector-item"><strong>IT / SOFTWARE</strong> — ${s.itSoftware || '—'}</div>
+    <div class="macro-sector-item"><strong>BANKS</strong> — ${s.banks || '—'}</div>
+    <div class="macro-sector-item"><strong>AUTO / MANUFACTURING</strong> — ${s.autoManufacturing || '—'}</div>
+    <div class="macro-sector-item"><strong>DEFENSIVE</strong> — ${s.defensive || '—'}</div>
+  `;
+}
+
+async function fetchMacroHealth() {
+  try {
+    const url = new URL('/api/macro-health', WORKER_URL).toString();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data?.ok) throw new Error(data?.error || 'invalid macro payload');
+    updateMacroHealthUI(data);
+  } catch (e) {
+    console.warn('Macro health fetch error:', e.message);
+    const updated = document.getElementById('macro-health-updated');
+    const alerts = document.getElementById('macro-health-alerts');
+    if (updated) updated.textContent = 'updated —';
+    if (alerts) alerts.innerHTML = `<div class="macro-health-alert macro-health-alert-warning">Macro health unavailable (${e.message}).</div>`;
+  }
+}
+
 function checkFIIDII() {
   const ist = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
   const today = ist.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
@@ -440,6 +528,8 @@ async function refreshAllLiveData() {
 
   // FII/DII daily check
   checkFIIDII();
+  // Macro Health panel
+  fetchMacroHealth();
 }
 
 // Show loading placeholder in ticker immediately

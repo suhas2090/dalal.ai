@@ -10,6 +10,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
     const url = new URL(request.url);
+    if (url.pathname === '/api/macro-health') return handleMacroHealth(corsHeaders, env);
+
     const p = url.searchParams;
     if (url.pathname === '/api/macro-health') return handleMacroHealth(corsHeaders, env);
     const symbolsParam = p.get('symbols');
