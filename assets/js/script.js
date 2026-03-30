@@ -397,27 +397,20 @@ function macroClassFromStatus(status) {
 
 function fmtMacroValue(val) {
   if (val === null || val === undefined || Number.isNaN(Number(val))) return '—';
-  const n = Number(val);
-  if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B';
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
-  if (Math.abs(n) >= 1_000) return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-  return n.toFixed(2);
+  return Number(val).toFixed(2);
 }
 
-let macroHealthData = null;
-let macroActiveKey = 'gdpGrowth';
-
 function updateMacroHealthUI(data) {
-  macroHealthData = data;
-  const badge = document.getElementById('macro-explorer-badge');
-  const score = document.getElementById('macro-explorer-score');
-  const signal = document.getElementById('macro-explorer-signal');
-  const updated = document.getElementById('macroExplorerTs');
-  const overview = document.getElementById('macroExplorerOverview');
-  const actionEl = document.getElementById('macroExplorerAction');
-  const alertsEl = document.getElementById('macroExplorerAlerts');
-  const sectorEl = document.getElementById('macroExplorerSector');
-  if (!badge || !score || !signal || !updated || !overview || !actionEl || !alertsEl || !sectorEl) return;
+  const badge = document.getElementById('macro-health-badge');
+  const score = document.getElementById('macro-health-score');
+  const signal = document.getElementById('macro-health-signal');
+  const updated = document.getElementById('macro-health-updated');
+  const cards = document.getElementById('macro-health-cards');
+  const alerts = document.getElementById('macro-health-alerts');
+  const action = document.getElementById('macro-trader-action');
+  const sectors = document.getElementById('macro-sector-list');
+
+  if (!badge || !score || !signal || !updated || !cards || !alerts || !action || !sectors) return;
 
   const badgeState = (data.healthBadge || 'yellow').toLowerCase();
   badge.classList.remove('macro-health-green', 'macro-health-yellow', 'macro-health-red');
@@ -425,8 +418,9 @@ function updateMacroHealthUI(data) {
   badge.textContent = (badgeState === 'green' ? 'HEALTHY' : badgeState === 'red' ? 'WARNING' : 'CAUTION');
 
   const scoreVal = Number(data.economicHealthScore);
-  score.textContent = `Score: ${Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—'}`;
-  signal.textContent = `Signal: ${data.traderSignal || 'CAUTION'}`;
+  score.textContent = Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—';
+
+  signal.textContent = data.traderSignal || 'CAUTION';
   signal.style.color =
     data.traderSignal === 'BULLISH' ? 'var(--green)'
       : data.traderSignal === 'BEARISH' ? 'var(--red)'
@@ -437,19 +431,28 @@ function updateMacroHealthUI(data) {
     : null;
   updated.textContent = `updated ${istTime ? `${istTime} IST` : '—'}`;
 
-  const alertTxt = (data.alerts || []).slice(0, 2).map(a => a.message).join(' | ') || 'No macro warnings.';
-  overview.innerHTML = `
-    <div><strong>Macro Pulse:</strong> ${data.traderSignal || 'CAUTION'} | ${badge.textContent}</div>
-    <div style="margin-top:5px"><strong>Key Alerts:</strong> ${alertTxt}</div>
-  `;
+  const indicatorEntries = Object.values(data.indicators || {});
+  cards.innerHTML = indicatorEntries.map((item) => {
+    const cls = macroClassFromStatus(item.status);
+    const trendIcon = item.trend === 'up' ? '▲' : item.trend === 'down' ? '▼' : '•';
+    return `<div class="macro-health-card ${cls}">
+      <div class="mh-name">${item.label || 'Indicator'}</div>
+      <div class="mh-value">${fmtMacroValue(item.value)} ${trendIcon}</div>
+      <div class="mh-date">${item.date || '—'}</div>
+    </div>`;
+  }).join('');
 
-  actionEl.textContent = data.traderActionRecommendation || 'No recommendation available.';
+  action.textContent = data.traderActionRecommendation || 'No recommendation available.';
+
   const alertList = Array.isArray(data.alerts) ? data.alerts : [];
-  alertsEl.innerHTML = alertList.length
-    ? alertList.slice(0, 4).map((a) => `<div class="macro-health-alert ${a.severity === 'warning' ? 'macro-health-alert-warning' : 'macro-health-alert-caution'}">${a.message}</div>`).join('')
+  alerts.innerHTML = alertList.length
+    ? alertList.slice(0, 4).map((a) =>
+      `<div class="macro-health-alert ${a.severity === 'warning' ? 'macro-health-alert-warning' : 'macro-health-alert-caution'}">${a.message}</div>`
+    ).join('')
     : '<div class="macro-health-alert macro-health-alert-neutral">No macro warnings right now.</div>';
+
   const s = data.sectorImpact || {};
-  sectorEl.innerHTML = `
+  sectors.innerHTML = `
     <div class="macro-sector-item"><strong>IT / SOFTWARE</strong> — ${s.itSoftware || '—'}</div>
     <div class="macro-sector-item"><strong>BANKS</strong> — ${s.banks || '—'}</div>
     <div class="macro-sector-item"><strong>AUTO / MANUFACTURING</strong> — ${s.autoManufacturing || '—'}</div>
@@ -457,106 +460,20 @@ function updateMacroHealthUI(data) {
   `;
 }
 
-async function fillMissingMacroWithGroq(data) {
-  const entries = Object.entries(data?.indicators || {});
-  const missing = entries.filter(([, v]) => v?.value === null || v?.value === undefined || Number.isNaN(Number(v?.value)));
-  if (!missing.length) return data;
-
-  // deterministic fallback so UI never shows blanks even without GROQ key
-  const gdp = Number(data?.indicators?.gdpGrowth?.value);
-  const cpi = Number(data?.indicators?.cpi?.value);
-  for (const [k, v] of missing) {
-    if (k === 'iip' && Number.isFinite(gdp)) { v.value = gdp * 0.8; v.date = 'Derived fallback'; }
-    if (k === 'wpi' && Number.isFinite(cpi)) { v.value = cpi * 0.9; v.date = 'Derived fallback'; }
-    if (k === 'unemployment' && Number.isFinite(gdp)) { v.value = Math.max(3.5, 8 - gdp * 0.5); v.date = 'Derived fallback'; }
-  }
-  if (!CONFIG.GROQ_API_KEY) return data;
-
-  const known = entries.filter(([, v]) => Number.isFinite(Number(v?.value))).map(([k, v]) => `${k}: ${v.value} (${v.date || 'n/a'})`).join('\n');
-  const need = missing.map(([k]) => k).join(', ');
-  const prompt = `You are a macro data assistant. Estimate latest plausible values for India macro indicators only for missing keys.
-Known indicators:\n${known}\nMissing keys: ${need}
-Return STRICT JSON object of key:number (no text).`;
-  const raw = await groqChat('Return only JSON.', prompt, 220);
-  if (!raw) return data;
-
-  try {
-    const cleaned = raw.trim().replace(/^```json\s*/i, '').replace(/```$/,'').trim();
-    const obj = JSON.parse(cleaned);
-    for (const [k, v] of missing) {
-      const guess = Number(obj?.[k]);
-      if (Number.isFinite(guess)) {
-        v.value = guess;
-        v.date = v.date || 'Groq estimate';
-        v.source = (v.source || '') + ' + Groq estimate';
-      }
-    }
-  } catch(e) {
-    console.warn('Groq missing fill parse failed:', e.message);
-  }
-  return data;
-}
-
-async function selectMacroIndicator(key, tabEl) {
-  macroActiveKey = key || macroActiveKey;
-  document.querySelectorAll('#macroExplorerTabs .mnp-tab').forEach((t) => t.classList.remove('active'));
-  if (tabEl) tabEl.classList.add('active');
-  else {
-    const found = document.querySelector(`#macroExplorerTabs .mnp-tab[data-macro-key="${macroActiveKey}"]`);
-    found?.classList.add('active');
-  }
-
-  const detail = document.getElementById('macroExplorerDetail');
-  if (!detail || !macroHealthData) return;
-  const indicator = macroHealthData?.indicators?.[macroActiveKey];
-  if (!indicator) return;
-  detail.textContent = 'Loading historical values + Groq AI interpretation…';
-
-  try {
-    const url = new URL('/api/macro-health', WORKER_URL);
-    url.searchParams.set('indicator', macroActiveKey);
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const d = await res.json();
-
-    const selected = d.selectedIndicator || {};
-    const histVals = Array.isArray(selected.history) ? selected.history : [];
-    const maxHist = Math.max(...histVals.map((v) => Number(v) || 0), 1);
-    const miniBars = histVals.slice(0, 10).reverse().map((v) => {
-      const n = Number(v) || 0;
-      const h = Math.max(8, Math.min(48, (Math.abs(n) / maxHist) * 48));
-      return `<div title="${n}" style="width:9px;height:${h}px;background:var(--saffron);border-radius:2px;opacity:.8"></div>`;
-    }).join('');
-    const summary = selected.summary || 'Summary unavailable.';
-
-    detail.innerHTML = `
-      <div class="macro-detail-title">${indicator.label} · ${fmtMacroValue(indicator.value)} (${indicator.date || '—'})</div>
-      <div class="macro-detail-history">History: ${histVals.length ? histVals.map((x) => fmtMacroValue(x)).join(' | ') : 'N/A'}</div>
-      <div style="display:flex;align-items:flex-end;gap:4px;height:54px;margin:8px 0 10px">${miniBars || '<span style="color:var(--muted)">No chart data</span>'}</div>
-      <div>${summary.replace(/\n/g, '<br>')}</div>
-    `;
-  } catch (e) {
-    detail.textContent = `Unable to load macro detail: ${e.message}`;
-  }
-}
-
 async function fetchMacroHealth() {
   try {
     const url = new URL('/api/macro-health', WORKER_URL).toString();
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    let data = await res.json();
+    const data = await res.json();
     if (!data?.ok) throw new Error(data?.error || 'invalid macro payload');
-    if (data.indicatorsDetail && !data.indicators?.gdpGrowth) data.indicators = data.indicatorsDetail;
-    data = await fillMissingMacroWithGroq(data);
     updateMacroHealthUI(data);
-    selectMacroIndicator(macroActiveKey);
   } catch (e) {
     console.warn('Macro health fetch error:', e.message);
-    const updated = document.getElementById('macroExplorerTs');
-    const detail = document.getElementById('macroExplorerDetail');
+    const updated = document.getElementById('macro-health-updated');
+    const alerts = document.getElementById('macro-health-alerts');
     if (updated) updated.textContent = 'updated —';
-    if (detail) detail.textContent = `Macro health unavailable (${e.message}).`;
+    if (alerts) alerts.innerHTML = `<div class="macro-health-alert macro-health-alert-warning">Macro health unavailable (${e.message}).</div>`;
   }
 }
 
