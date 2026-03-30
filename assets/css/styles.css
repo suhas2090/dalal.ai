@@ -829,42 +829,6 @@
   .macro-sector-list { display: flex; flex-direction: column; gap: 6px; }
   .macro-sector-item { font-size: 10px; line-height: 1.35; color: var(--text); border-left: 2px solid var(--border); padding-left: 7px; }
   .macro-sector-item strong { color: var(--saffron); font-size: 9px; letter-spacing: .5px; }
-  .macro-explorer-topline { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-  .macro-explorer-score, .macro-explorer-signal {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 3px 8px;
-  }
-  .macro-explorer-overview {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    padding: 10px;
-    font-size: 11px;
-    line-height: 1.55;
-    margin-bottom: 10px;
-  }
-  .macro-explorer-detail {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    padding: 12px;
-    font-size: 11px;
-    line-height: 1.6;
-    min-height: 160px;
-    white-space: pre-line;
-  }
-  .macro-detail-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--saffron);
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-  }
-  .macro-detail-history { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text); margin-bottom: 8px; }
 
   .fii-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
 
