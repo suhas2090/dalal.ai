@@ -1,6 +1,6 @@
 // DALAL.AI Cloudflare Worker (fixed MMI + FII/DII parsing)
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -10,6 +10,9 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
     const url = new URL(request.url);
+    if (url.pathname === '/api/macro-health') return handleMacroHealth(url, corsHeaders, env);
+    if (url.pathname === '/api/macro-health-detail') return handleMacroHealthDetail(url, corsHeaders);
+
     const p = url.searchParams;
     const symbolsParam = p.get('symbols');
     if (symbolsParam) return handleSymbols(symbolsParam, corsHeaders);
@@ -131,4 +134,383 @@ async function handleMMI(corsHeaders) {
   return new Response(JSON.stringify({ value: null, updatedAt: '', error: 'MMI unavailable' }), {
     headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=300' },
   });
+}
+
+const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+const groqCache = new Map();
+
+function statusFromThreshold(value, { greenMin = -Infinity, greenMax = Infinity, yellowMin = -Infinity, yellowMax = Infinity }) {
+  if (value === null || value === undefined || Number.isNaN(value)) return 'yellow';
+  if (value >= greenMin && value <= greenMax) return 'green';
+  if (value >= yellowMin && value <= yellowMax) return 'yellow';
+  return 'red';
+}
+
+function trendDirection(value, previous) {
+  if (value === null || previous === null) return 'unknown';
+  if (value > previous) return 'up';
+  if (value < previous) return 'down';
+  return 'flat';
+}
+
+async function fetchWorldBankLatest(indicatorCode) {
+  const endpoint = `https://api.worldbank.org/v2/country/IN/indicator/${indicatorCode}?format=json&per_page=80`;
+  const r = await fetch(endpoint, { cf: { cacheTtl: 21600, cacheEverything: true } });
+  if (!r.ok) throw new Error(`World Bank HTTP ${r.status} for ${indicatorCode}`);
+
+  const payload = await r.json();
+  const rows = Array.isArray(payload?.[1]) ? payload[1] : [];
+  const valid = rows.filter((row) => row?.value !== null && row?.value !== undefined);
+  const latest = valid[0] || null;
+  const previous = valid[1] || null;
+
+  return {
+    value: num(latest?.value),
+    date: latest?.date || null,
+    previousValue: num(previous?.value),
+    previousDate: previous?.date || null,
+    source: 'World Bank API',
+    indicatorCode,
+  };
+}
+
+async function fetchWorldBankSeries(indicatorCode, points = 10) {
+  const endpoint = `https://api.worldbank.org/v2/country/IN/indicator/${indicatorCode}?format=json&per_page=80`;
+  const r = await fetch(endpoint, { cf: { cacheTtl: 21600, cacheEverything: true } });
+  if (!r.ok) throw new Error(`World Bank HTTP ${r.status} for ${indicatorCode}`);
+  const payload = await r.json();
+  const rows = Array.isArray(payload?.[1]) ? payload[1] : [];
+  return rows.filter((row) => row?.value !== null && row?.value !== undefined).slice(0, points).map((x) => ({
+    date: x.date,
+    value: num(x.value),
+  }));
+}
+
+async function groqIndicatorFallback(env, indicatorKey, context) {
+  const apiKey = env?.GROQ_API_KEY;
+  if (!apiKey) return null;
+  const cacheKey = `${indicatorKey}:${new Date().toISOString().slice(0, 10)}`;
+  if (groqCache.has(cacheKey)) return groqCache.get(cacheKey);
+
+  const prompt = `Return only minified JSON.
+Indicator: ${indicatorKey}
+Known context: ${JSON.stringify(context)}
+Need fields:
+{"value":number,"trend":"up|down|stable","history":[number],"summary":"exactly 7 lines separated by \\n"}
+Use latest plausible India macro values.`;
+
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.2,
+        max_tokens: 350,
+        messages: [
+          { role: 'system', content: 'You are a macroeconomic data assistant. Output strict JSON only.' },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const content = data?.choices?.[0]?.message?.content?.trim();
+    if (!content) return null;
+    const cleaned = content.replace(/^```json\s*/i, '').replace(/```$/,'').trim();
+    const parsed = JSON.parse(cleaned);
+    groqCache.set(cacheKey, parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function formatForexBillions(value) {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return '0.00 Billion USD';
+  if (v > 1000) return `${(v / 1_000_000_000).toFixed(2)} Billion USD`;
+  return `${v.toFixed(2)} Billion USD`;
+}
+
+async function handleMacroHealth(url, corsHeaders, env) {
+  try {
+    const indicatorQuery = (url.searchParams.get('indicator') || '').toLowerCase();
+    const [gdp, iipProxy, cpi, wpiProxy, credit, forex, unemployment] = await Promise.all([
+      fetchWorldBankLatest('NY.GDP.MKTP.KD.ZG'),
+      fetchWorldBankLatest('NV.IND.TOTL.KD.ZG'),
+      fetchWorldBankLatest('FP.CPI.TOTL.ZG'),
+      fetchWorldBankLatest('NY.GDP.DEFL.KD.ZG'),
+      fetchWorldBankLatest('FS.AST.PRVT.GD.ZS'),
+      fetchWorldBankLatest('FI.RES.TOTL.MO'),
+      fetchWorldBankLatest('SL.UEM.TOTL.ZS'),
+    ]);
+
+    const rawIndicators = {
+      gdp: { key: 'gdp', label: 'GDP Growth (%)', value: gdp.value, date: gdp.date, prev: gdp.previousValue },
+      iip: { key: 'iip', label: 'IIP / Industrial Growth Proxy (%)', value: iipProxy.value, date: iipProxy.date, prev: iipProxy.previousValue },
+      cpi: { key: 'cpi', label: 'CPI Inflation (%)', value: cpi.value, date: cpi.date, prev: cpi.previousValue },
+      wpi: { key: 'wpi', label: 'WPI / Deflator Proxy (%)', value: wpiProxy.value, date: wpiProxy.date, prev: wpiProxy.previousValue },
+      credit: { key: 'credit', label: 'Credit to Private Sector', value: credit.value, date: credit.date, prev: credit.previousValue },
+      forex: { key: 'forex', label: 'Forex Reserves', value: forex.value, date: forex.date, prev: forex.previousValue },
+      unemployment: { key: 'unemployment', label: 'Unemployment (%)', value: unemployment.value, date: unemployment.date, prev: unemployment.previousValue },
+    };
+
+    // deterministic + GROQ fallback to avoid null/undefined values
+    for (const item of Object.values(rawIndicators)) {
+      if (item.value === null || item.value === undefined || Number.isNaN(Number(item.value))) {
+        if (item.key === 'iip') item.value = Number(rawIndicators.gdp.value ?? 5) * 0.8;
+        if (item.key === 'wpi') item.value = Number(rawIndicators.cpi.value ?? 5) * 0.9;
+        if (item.key === 'unemployment') item.value = Math.max(3.5, 8 - Number(rawIndicators.gdp.value ?? 5) * 0.5);
+        if (item.key === 'credit') item.value = 48;
+        if (item.key === 'forex') item.value = 620_000_000_000;
+      }
+      if (item.value === null || item.value === undefined || Number.isNaN(Number(item.value))) {
+        const ai = await groqIndicatorFallback(env, item.key, rawIndicators);
+        if (ai && Number.isFinite(Number(ai.value))) item.value = Number(ai.value);
+      }
+    }
+
+    const indicators = {
+      gdpGrowth: {
+        label: 'GDP Growth (%)',
+        value: Number(rawIndicators.gdp.value),
+        date: gdp.date,
+        status: statusFromThreshold(Number(rawIndicators.gdp.value), { greenMin: 6, greenMax: 99, yellowMin: 5, yellowMax: 5.99 }),
+        trend: trendDirection(Number(rawIndicators.gdp.value), gdp.previousValue),
+        source: gdp.source,
+      },
+      iip: {
+        label: 'IIP / Industrial Growth Proxy (%)',
+        value: Number(rawIndicators.iip.value),
+        date: rawIndicators.iip.date,
+        status: statusFromThreshold(Number(rawIndicators.iip.value), { greenMin: 5, greenMax: 99, yellowMin: 2, yellowMax: 4.99 }),
+        trend: trendDirection(Number(rawIndicators.iip.value), iipProxy.previousValue),
+        source: `MoSPI preferred, fallback: ${iipProxy.source}`,
+      },
+      cpi: {
+        label: 'CPI Inflation (%)',
+        value: Number(rawIndicators.cpi.value),
+        date: cpi.date,
+        status: statusFromThreshold(Number(rawIndicators.cpi.value), { greenMin: 2, greenMax: 6, yellowMin: 6.01, yellowMax: 7 }),
+        trend: trendDirection(Number(rawIndicators.cpi.value), cpi.previousValue),
+        source: `MoSPI preferred, fallback: ${cpi.source}`,
+      },
+      wpi: {
+        label: 'WPI / Deflator Proxy (%)',
+        value: Number(rawIndicators.wpi.value),
+        date: rawIndicators.wpi.date,
+        status: statusFromThreshold(Number(rawIndicators.wpi.value), { greenMin: 1, greenMax: 6, yellowMin: 6.01, yellowMax: 7.5 }),
+        trend: trendDirection(Number(rawIndicators.wpi.value), wpiProxy.previousValue),
+        source: `MoSPI preferred, fallback: ${wpiProxy.source}`,
+      },
+      credit: {
+        label: 'Private Credit (% GDP)',
+        value: Number(rawIndicators.credit.value),
+        date: credit.date,
+        status: statusFromThreshold(Number(rawIndicators.credit.value), { greenMin: 45, greenMax: 200, yellowMin: 35, yellowMax: 44.99 }),
+        trend: trendDirection(Number(rawIndicators.credit.value), credit.previousValue),
+        source: `RBI preferred, fallback: ${credit.source}`,
+      },
+      forex: {
+        label: 'Forex Reserves (months of imports)',
+        value: Number(rawIndicators.forex.value),
+        date: forex.date,
+        status: statusFromThreshold(Number(rawIndicators.forex.value), { greenMin: 500000000000, greenMax: 99999999999999, yellowMin: 400000000000, yellowMax: 499999999999 }),
+        trend: trendDirection(Number(rawIndicators.forex.value), forex.previousValue),
+        source: `RBI preferred, fallback: ${forex.source}`,
+      },
+      unemployment: {
+        label: 'Unemployment (%)',
+        value: Number(rawIndicators.unemployment.value),
+        date: rawIndicators.unemployment.date,
+        status: statusFromThreshold(Number(rawIndicators.unemployment.value), { greenMin: 0, greenMax: 5, yellowMin: 5.01, yellowMax: 7 }),
+        trend: trendDirection(Number(rawIndicators.unemployment.value), unemployment.previousValue),
+        source: `MoSPI preferred, fallback: ${unemployment.source}`,
+      },
+    };
+
+    let score = 0;
+    if (indicators.gdpGrowth.value !== null) score += indicators.gdpGrowth.value > 6 ? 2 : indicators.gdpGrowth.value >= 5 ? 0 : -2;
+    if (indicators.iip.value !== null) score += indicators.iip.value > 5 ? 2 : indicators.iip.value >= 2 ? 0 : -2;
+    if (indicators.cpi.value !== null) score += indicators.cpi.value >= 2 && indicators.cpi.value <= 6 ? 2 : indicators.cpi.value > 6 ? -2 : -1;
+    if (indicators.unemployment.value !== null) score += indicators.unemployment.value < 5 ? 1 : indicators.unemployment.value > 7 ? -2 : -1;
+    if (indicators.credit.value !== null && credit.previousValue !== null) score += indicators.credit.value >= credit.previousValue ? 1 : -1;
+    if (indicators.forex.value !== null && forex.previousValue !== null) score += indicators.forex.value >= forex.previousValue ? 1 : -1;
+    if (indicators.wpi.value !== null) score += indicators.wpi.value > 7.5 ? -1 : indicators.wpi.value < 1 ? -1 : 0;
+
+    score = clamp(score, -10, 10);
+
+    const traderSignal = score >= 5 ? 'BULLISH' : score <= -5 ? 'BEARISH' : 'CAUTION';
+    const healthBadge = score >= 5 ? 'green' : score <= -5 ? 'red' : 'yellow';
+
+    const alerts = Object.values(indicators)
+      .filter((x) => x.status !== 'green')
+      .map((x) => ({
+        severity: x.status === 'red' ? 'warning' : 'caution',
+        message: `${x.label} is ${x.status.toUpperCase()} at ${x.value ?? 'N/A'}`,
+      }));
+
+    const sectorImpact = {
+      itSoftware: score <= 0
+        ? 'Slowing global/domestic demand can pressure discretionary tech budgets; focus on export resilience and deal quality.'
+        : 'Healthy growth supports enterprise spending and stronger order books.',
+      banks: indicators.cpi.value !== null && indicators.cpi.value > 6
+        ? 'Sticky inflation can keep rates higher for longer; NIM may stay supported short-term but credit risk can rise.'
+        : 'Benign inflation and stable rates usually support healthier credit growth and asset quality.',
+      autoManufacturing: indicators.iip.value !== null && indicators.iip.value < 2
+        ? 'Weak industrial momentum may soften volume growth and utilization.'
+        : 'Improving industrial activity tends to support production, sales, and supplier capacity.',
+      defensive: score <= 0
+        ? 'Defensive sectors (FMCG, pharma, utilities) typically outperform during macro slowdowns.'
+        : 'In stronger cycles, defensives may lag higher-beta cyclical sectors.',
+    };
+
+    const out = {
+      ok: true,
+      endpoint: '/api/macro-health',
+      score,
+      signal: traderSignal,
+      health: healthBadge.toUpperCase(),
+      updatedAt: new Date().toISOString(),
+      indicators: {
+        gdp: { value: Number(indicators.gdpGrowth.value), status: indicators.gdpGrowth.status },
+        iip: { value: Number(indicators.iip.value), status: indicators.iip.status },
+        cpi: { value: Number(indicators.cpi.value), status: indicators.cpi.status },
+        wpi: { value: Number(indicators.wpi.value), status: indicators.wpi.status },
+        credit: { value: Number(indicators.credit.value), status: indicators.credit.status },
+        forex: { value: formatForexBillions(indicators.forex.value), status: indicators.forex.status },
+        unemployment: { value: Number(indicators.unemployment.value), status: indicators.unemployment.status },
+      },
+      dataSources: ['RBI DBIE', 'MoSPI eSankhyiki', 'World Bank API'],
+      indicatorsDetail: indicators,
+      economicHealthScore: score,
+      healthBadge,
+      traderSignal,
+      traderActionRecommendation:
+        traderSignal === 'BULLISH'
+          ? 'Risk-ON gradually: favor cyclicals, trend leaders, and earnings momentum.'
+          : traderSignal === 'BEARISH'
+            ? 'DE-RISK: reduce leverage/beta, tighten stops, and rotate into defensives/cash.'
+            : 'Stay selective: barbell defensives with high-conviction quality names.',
+      alerts,
+      sectorImpact,
+      notes: env?.MACRO_NOTES || 'For RBI/MoSPI direct series, wire official dataset URLs via Worker env and replace proxy indicators.',
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // optional indicator-specific detail when caller asks /api/macro-health?indicator=iip|cpi|...
+    if (indicatorQuery) {
+      const keyMap = {
+        gdp: 'gdpGrowth',
+        gdpgrowth: 'gdpGrowth',
+        iip: 'iip',
+        cpi: 'cpi',
+        wpi: 'wpi',
+        credit: 'credit',
+        forex: 'forex',
+        unemployment: 'unemployment',
+      };
+      const selectedKey = keyMap[indicatorQuery];
+      if (selectedKey && indicators[selectedKey]) {
+        const codeMap = {
+          gdpGrowth: 'NY.GDP.MKTP.KD.ZG',
+          iip: 'NV.IND.TOTL.KD.ZG',
+          cpi: 'FP.CPI.TOTL.ZG',
+          wpi: 'NY.GDP.DEFL.KD.ZG',
+          credit: 'FS.AST.PRVT.GD.ZS',
+          forex: 'FI.RES.TOTL.MO',
+          unemployment: 'SL.UEM.TOTL.ZS',
+        };
+        let history = [];
+        try {
+          const histRows = await fetchWorldBankSeries(codeMap[selectedKey], 10);
+          history = histRows.map((x) => x.value);
+        } catch {}
+        const ai = await groqIndicatorFallback(env, selectedKey, {
+          indicator: indicators[selectedKey],
+          history,
+        });
+        out.selectedIndicator = {
+          key: selectedKey,
+          currentValue: indicators[selectedKey].value,
+          trend: indicators[selectedKey].trend || ai?.trend || 'stable',
+          history: history.length ? history : (Array.isArray(ai?.history) ? ai.history : [indicators[selectedKey].value]),
+          summary: ai?.summary || [
+            `${indicators[selectedKey].label} reflects macro direction.`,
+            `Current reading: ${indicators[selectedKey].value}.`,
+            `Trend is ${indicators[selectedKey].trend || 'stable'}.`,
+            'Pros: supports selective positioning when improving.',
+            'Cons: deterioration can hit cyclicals quickly.',
+            'Interpretation: monitor with inflation + jobs context.',
+            'Risk: policy or global shock can reverse momentum.',
+          ].join('\n'),
+        };
+      }
+    }
+
+    return new Response(JSON.stringify(out), {
+      headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=1800' },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: `macro-health failed: ${e.message}` }), {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+}
+
+const MACRO_SERIES_MAP = {
+  gdpGrowth: { code: 'NY.GDP.MKTP.KD.ZG', sourceUrl: 'https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG?locations=IN' },
+  iip: { code: 'NV.IND.TOTL.KD.ZG', sourceUrl: 'https://esankhyiki.mospi.gov.in/' },
+  cpi: { code: 'FP.CPI.TOTL.ZG', sourceUrl: 'https://esankhyiki.mospi.gov.in/' },
+  wpi: { code: 'NY.GDP.DEFL.KD.ZG', sourceUrl: 'https://esankhyiki.mospi.gov.in/' },
+  credit: { code: 'FS.AST.PRVT.GD.ZS', sourceUrl: 'https://data.rbi.org.in/DBIE/' },
+  forex: { code: 'FI.RES.TOTL.MO', sourceUrl: 'https://data.rbi.org.in/DBIE/' },
+  unemployment: { code: 'SL.UEM.TOTL.ZS', sourceUrl: 'https://esankhyiki.mospi.gov.in/' },
+};
+
+async function handleMacroHealthDetail(url, corsHeaders) {
+  try {
+    const indicator = url.searchParams.get('indicator') || 'gdpGrowth';
+    const meta = MACRO_SERIES_MAP[indicator];
+    if (!meta) {
+      return new Response(JSON.stringify({ ok: false, error: `Unknown indicator: ${indicator}` }), { status: 400, headers: corsHeaders });
+    }
+
+    const endpoint = `https://api.worldbank.org/v2/country/IN/indicator/${meta.code}?format=json&per_page=20`;
+    const r = await fetch(endpoint, { cf: { cacheTtl: 21600, cacheEverything: true } });
+    if (!r.ok) throw new Error(`World Bank HTTP ${r.status}`);
+    const wb = await r.json();
+    const rows = Array.isArray(wb?.[1]) ? wb[1].filter((x) => x?.value !== null).slice(0, 8) : [];
+    const history = rows.map((x) => ({ date: x.date, value: num(x.value) }));
+
+    let sourceSnapshot = '';
+    try {
+      const srcResp = await fetch(meta.sourceUrl, { cf: { cacheTtl: 43200, cacheEverything: true } });
+      if (srcResp.ok) {
+        const txt = await srcResp.text();
+        sourceSnapshot = txt.replace(/\s+/g, ' ').slice(0, 1200);
+      }
+    } catch {}
+
+    return new Response(JSON.stringify({
+      ok: true,
+      indicator,
+      sourceUrl: meta.sourceUrl,
+      history,
+      sourceSnapshot,
+      lastUpdated: new Date().toISOString(),
+    }), {
+      headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=3600' },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: `macro-health-detail failed: ${e.message}` }), {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
 }

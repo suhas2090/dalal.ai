@@ -241,44 +241,40 @@
 
     </div><!-- end TV + DMD row -->
 
-    <!-- ③ X.COM LIVE FEED PANEL -->
+    <!-- ③ MACRO HEALTH EXPLORER PANEL -->
     <div class="main-news-panel x-feed-panel">
       <div class="mnp-section-label" style="margin-bottom:10px">
-        <span>𝕏 Indian Market Pulse</span>
-        <span id="xFeedRefreshTs" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">● live</span>
+        <span>🧭 Macro Health Explorer</span>
+        <span id="macroExplorerTs" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">updated —</span>
       </div>
 
-      <!-- Filter tabs: All | Indian Market (90%) | US Impact (10%) -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-        <div class="mnp-tabs" id="xFilterTabs" style="margin-bottom:0">
-          <div class="mnp-tab active" onclick="xSetFilter('all',this)">All</div>
-          <div class="mnp-tab" onclick="xSetFilter('india',this)">🇮🇳 India</div>
-          <div class="mnp-tab" onclick="xSetFilter('us',this)">🇺🇸 US Impact</div>
-          <div class="mnp-tab" onclick="xSetFilter('breaking',this)">🔴 Breaking</div>
-        </div>
-        <button class="x-feed-btn" onclick="xManualRefresh()" style="font-size:10px;padding:4px 10px">⟳ Refresh</button>
+      <div class="macro-explorer-topline">
+        <div id="macro-explorer-badge" class="macro-health-badge macro-health-yellow">CAUTION</div>
+        <div id="macro-explorer-score" class="macro-explorer-score">Score: —</div>
+        <div id="macro-explorer-signal" class="macro-explorer-signal">Signal: —</div>
       </div>
 
-      <!-- Add account / hashtag row -->
-      <div class="x-feed-add-row" style="margin-bottom:6px">
-        <input id="xHandleInput" class="x-feed-input" type="text" placeholder="Add @handle (e.g. ETMarkets)" onkeydown="if(event.key==='Enter')addXAccount()"/>
-        <button class="x-feed-btn" onclick="addXAccount()">+ Account</button>
+      <div class="mnp-tabs" id="macroExplorerTabs" style="margin-bottom:10px;flex-wrap:wrap">
+        <div class="mnp-tab active" data-macro-key="gdpGrowth" onclick="selectMacroIndicator('gdpGrowth',this)">GDP</div>
+        <div class="mnp-tab" data-macro-key="iip" onclick="selectMacroIndicator('iip',this)">IIP</div>
+        <div class="mnp-tab" data-macro-key="cpi" onclick="selectMacroIndicator('cpi',this)">CPI</div>
+        <div class="mnp-tab" data-macro-key="wpi" onclick="selectMacroIndicator('wpi',this)">WPI</div>
+        <div class="mnp-tab" data-macro-key="credit" onclick="selectMacroIndicator('credit',this)">Credit</div>
+        <div class="mnp-tab" data-macro-key="forex" onclick="selectMacroIndicator('forex',this)">Forex</div>
+        <div class="mnp-tab" data-macro-key="unemployment" onclick="selectMacroIndicator('unemployment',this)">Unemployment</div>
       </div>
-      <div class="x-feed-add-row" style="margin-bottom:8px">
-        <input id="xTagInput" class="x-feed-input" type="text" placeholder="Add #hashtag (e.g. Nifty50, Sensex)" onkeydown="if(event.key==='Enter')addXTag()"/>
-        <button class="x-feed-btn" onclick="addXTag()">+ Hashtag</button>
+
+      <div id="macroExplorerOverview" class="macro-explorer-overview">Loading macro overview…</div>
+      <div id="macroExplorerDetail" class="macro-explorer-detail">Select any macro tab to load historical values + 7-line Groq summary.</div>
+      <div class="macro-health-subtitle">Trader Action</div>
+      <div id="macroExplorerAction" class="macro-health-action">Loading recommendation…</div>
+      <div class="macro-health-subtitle">Alerts</div>
+      <div id="macroExplorerAlerts" class="macro-sector-list">
+        <div class="macro-health-alert macro-health-alert-neutral">Loading alerts…</div>
       </div>
-
-      <!-- Active accounts + hashtags chips -->
-      <div id="xAccountChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
-      <div id="xHashtagChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
-
-      <!-- Feed list -->
-      <div id="xFeedList" style="display:flex;flex-direction:column;gap:8px;max-height:900px;overflow-y:auto"></div>
-
-      <!-- Loading skeleton -->
-      <div id="xFeedLoading" style="display:none;padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">
-        <div style="animation:spin 1.5s linear infinite;display:inline-block;margin-right:6px">⟳</div> Fetching market pulse from X.com…
+      <div class="macro-health-subtitle">Sector Impact</div>
+      <div id="macroExplorerSector" class="macro-sector-list">
+        <div class="macro-sector-item">Loading sector impact…</div>
       </div>
     </div>
 
