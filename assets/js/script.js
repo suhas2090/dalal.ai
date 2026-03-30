@@ -2261,9 +2261,11 @@ function xSaveCustom() {
 }
 
 // ── INIT ──
-xRenderChips();
-xFetchAll();
-setInterval(xFetchAll, 5 * 60 * 1000);
+if (document.getElementById('xFeedList')) {
+  xRenderChips();
+  xFetchAll();
+  setInterval(xFetchAll, 5 * 60 * 1000);
+}
 
 
 // ══════════════════════════════════════════════════════
