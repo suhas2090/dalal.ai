@@ -389,6 +389,157 @@ async function fetchFIIDII() {
   } catch(e) { console.warn('FII/DII fetch error:', e.message); }
 }
 
+function macroClassFromStatus(status) {
+  if (status === 'green') return 'macro-health-green';
+  if (status === 'red') return 'macro-health-red';
+  return 'macro-health-yellow';
+}
+
+function fmtMacroValue(val) {
+  if (val === null || val === undefined || Number.isNaN(Number(val))) return '—';
+  return Number(val).toFixed(2);
+}
+
+let macroHealthData = null;
+let macroActiveKey = 'gdpGrowth';
+
+function updateMacroHealthUI(data) {
+  macroHealthData = data;
+  const badge = document.getElementById('macro-explorer-badge');
+  const score = document.getElementById('macro-explorer-score');
+  const signal = document.getElementById('macro-explorer-signal');
+  const updated = document.getElementById('macroExplorerTs');
+  const overview = document.getElementById('macroExplorerOverview');
+  if (!badge || !score || !signal || !updated || !overview) return;
+
+  const badgeState = (data.healthBadge || 'yellow').toLowerCase();
+  badge.classList.remove('macro-health-green', 'macro-health-yellow', 'macro-health-red');
+  badge.classList.add(macroClassFromStatus(badgeState));
+  badge.textContent = (badgeState === 'green' ? 'HEALTHY' : badgeState === 'red' ? 'WARNING' : 'CAUTION');
+
+  const scoreVal = Number(data.economicHealthScore);
+  score.textContent = `Score: ${Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—'}`;
+  signal.textContent = `Signal: ${data.traderSignal || 'CAUTION'}`;
+  signal.style.color =
+    data.traderSignal === 'BULLISH' ? 'var(--green)'
+      : data.traderSignal === 'BEARISH' ? 'var(--red)'
+        : 'var(--gold)';
+
+  const istTime = data.lastUpdated
+    ? new Date(data.lastUpdated).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+  updated.textContent = `updated ${istTime ? `${istTime} IST` : '—'}`;
+
+  const alertTxt = (data.alerts || []).slice(0, 2).map(a => a.message).join(' | ') || 'No macro warnings.';
+  overview.innerHTML = `
+    <div><strong>Action:</strong> ${data.traderActionRecommendation || '—'}</div>
+    <div style="margin-top:5px"><strong>Alerts:</strong> ${alertTxt}</div>
+    <div style="margin-top:5px"><strong>Sector Lens:</strong> ${data?.sectorImpact?.defensive || '—'}</div>
+  `;
+}
+
+async function fillMissingMacroWithGroq(data) {
+  if (!CONFIG.GROQ_API_KEY) return data;
+  const entries = Object.entries(data?.indicators || {});
+  const missing = entries.filter(([, v]) => v?.value === null || v?.value === undefined || Number.isNaN(Number(v?.value)));
+  if (!missing.length) return data;
+
+  const known = entries.filter(([, v]) => Number.isFinite(Number(v?.value))).map(([k, v]) => `${k}: ${v.value} (${v.date || 'n/a'})`).join('\n');
+  const need = missing.map(([k]) => k).join(', ');
+  const prompt = `You are a macro data assistant. Estimate latest plausible values for India macro indicators only for missing keys.
+Known indicators:\n${known}\nMissing keys: ${need}
+Return STRICT JSON object of key:number (no text).`;
+  const raw = await groqChat('Return only JSON.', prompt, 220);
+  if (!raw) return data;
+
+  try {
+    const cleaned = raw.trim().replace(/^```json\s*/i, '').replace(/```$/,'').trim();
+    const obj = JSON.parse(cleaned);
+    for (const [k, v] of missing) {
+      const guess = Number(obj?.[k]);
+      if (Number.isFinite(guess)) {
+        v.value = guess;
+        v.date = v.date || 'Groq estimate';
+        v.source = (v.source || '') + ' + Groq estimate';
+      }
+    }
+  } catch(e) {
+    console.warn('Groq missing fill parse failed:', e.message);
+  }
+  return data;
+}
+
+async function selectMacroIndicator(key, tabEl) {
+  macroActiveKey = key || macroActiveKey;
+  document.querySelectorAll('#macroExplorerTabs .mnp-tab').forEach((t) => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  else {
+    const found = document.querySelector(`#macroExplorerTabs .mnp-tab[data-macro-key="${macroActiveKey}"]`);
+    found?.classList.add('active');
+  }
+
+  const detail = document.getElementById('macroExplorerDetail');
+  if (!detail || !macroHealthData) return;
+  const indicator = macroHealthData?.indicators?.[macroActiveKey];
+  if (!indicator) return;
+  detail.textContent = 'Loading historical values + Groq AI interpretation…';
+
+  try {
+    const url = new URL('/api/macro-health-detail', WORKER_URL);
+    url.searchParams.set('indicator', macroActiveKey);
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+
+    let aiSummary = 'Groq summary unavailable (set GROQ key).';
+    if (CONFIG.GROQ_API_KEY) {
+      const hist = (d.history || []).map(x => `${x.date}: ${x.value}`).join(', ');
+      const usr = `Indicator: ${indicator.label}
+Current value: ${indicator.value} (${indicator.date})
+Source URL: ${d.sourceUrl}
+Source snippet: ${d.sourceSnapshot || 'N/A'}
+History: ${hist}
+Write exactly 7 short lines:
+1) what it means,
+2) current signal,
+3) trend context,
+4) pro,
+5) con,
+6) trader implication,
+7) risk to monitor.`;
+      const out = await groqChat('You are a macro strategist. Be concise and practical.', usr, 280);
+      if (out) aiSummary = out;
+    }
+
+    detail.innerHTML = `
+      <div class="macro-detail-title">${indicator.label} · ${fmtMacroValue(indicator.value)} (${indicator.date || '—'})</div>
+      <div class="macro-detail-history">History: ${(d.history || []).map(x => `${x.date}:${x.value}`).join(' | ') || 'N/A'}</div>
+      <div>${aiSummary.replace(/\n/g, '<br>')}</div>
+    `;
+  } catch (e) {
+    detail.textContent = `Unable to load macro detail: ${e.message}`;
+  }
+}
+
+async function fetchMacroHealth() {
+  try {
+    const url = new URL('/api/macro-health', WORKER_URL).toString();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    let data = await res.json();
+    if (!data?.ok) throw new Error(data?.error || 'invalid macro payload');
+    data = await fillMissingMacroWithGroq(data);
+    updateMacroHealthUI(data);
+    selectMacroIndicator(macroActiveKey);
+  } catch (e) {
+    console.warn('Macro health fetch error:', e.message);
+    const updated = document.getElementById('macroExplorerTs');
+    const detail = document.getElementById('macroExplorerDetail');
+    if (updated) updated.textContent = 'updated —';
+    if (detail) detail.textContent = `Macro health unavailable (${e.message}).`;
+  }
+}
+
 function checkFIIDII() {
   const ist = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
   const today = ist.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
@@ -440,6 +591,8 @@ async function refreshAllLiveData() {
 
   // FII/DII daily check
   checkFIIDII();
+  // Macro Health panel
+  fetchMacroHealth();
 }
 
 // Show loading placeholder in ticker immediately
@@ -2171,9 +2324,11 @@ function xSaveCustom() {
 }
 
 // ── INIT ──
-xRenderChips();
-xFetchAll();
-setInterval(xFetchAll, 5 * 60 * 1000);
+if (document.getElementById('xFeedList')) {
+  xRenderChips();
+  xFetchAll();
+  setInterval(xFetchAll, 5 * 60 * 1000);
+}
 
 
 // ══════════════════════════════════════════════════════
