@@ -829,6 +829,29 @@
   .macro-sector-list { display: flex; flex-direction: column; gap: 6px; }
   .macro-sector-item { font-size: 10px; line-height: 1.35; color: var(--text); border-left: 2px solid var(--border); padding-left: 7px; }
   .macro-sector-item strong { color: var(--saffron); font-size: 9px; letter-spacing: .5px; }
+  .macro-health-center-panel {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .macro-health-center-title { margin-bottom: 8px; }
+  .macro-health-tabs { margin: 12px 0 8px; flex-wrap: wrap; }
+  .macro-health-tab-panels {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    min-height: 116px;
+  }
+  .macro-health-tab-panel { display: none; padding: 10px; }
+  .macro-health-tab-panel.active { display: block; }
+  .macro-health-cell {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 7px;
+    padding: 10px;
+    background: rgba(255,255,255,0.01);
+    min-height: 88px;
+  }
+  #macro-health-alerts.macro-health-cell .macro-health-alert:last-child { margin-bottom: 0; }
 
   .fii-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
 

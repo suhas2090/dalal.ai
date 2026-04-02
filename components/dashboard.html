@@ -264,8 +264,56 @@
         <div class="mnp-tab" data-macro-key="unemployment" onclick="selectMacroIndicator('unemployment',this)">Unemployment</div>
       </div>
 
-      <div id="macroExplorerOverview" class="macro-explorer-overview">Loading macro overview…</div>
+    <div id="macroExplorerOverview" class="macro-explorer-overview">Loading macro overview…</div>
       <div id="macroExplorerDetail" class="macro-explorer-detail">Select any macro tab to load historical values + 7-line Groq summary.</div>
+    </div>
+
+    <!-- ⑤ MACRO HEALTH PANEL (CENTER) -->
+    <div class="main-news-panel x-feed-panel macro-health-center-panel">
+      <div class="pb-label macro-health-center-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span>Macro Health</span>
+        <span id="macro-health-badge" class="macro-health-badge macro-health-yellow">CAUTION</span>
+      </div>
+
+      <div class="macro-health-top">
+        <div class="macro-health-score-wrap">
+          <div class="macro-health-score-label">Health Score</div>
+          <div class="macro-health-score" id="macro-health-score">—</div>
+        </div>
+        <div class="macro-health-signal-wrap">
+          <div class="macro-health-score-label">Trader Signal</div>
+          <div class="macro-health-signal" id="macro-health-signal">Loading…</div>
+        </div>
+      </div>
+      <div class="macro-health-updated" id="macro-health-updated">updated —</div>
+
+      <div class="macro-health-grid" id="macro-health-cards">
+        <div class="macro-health-card skeleton">Fetching macro data…</div>
+      </div>
+
+      <div class="mnp-tabs macro-health-tabs" id="macroHealthTabs">
+        <div class="mnp-tab active" onclick="macroHealthSwitchTab('traderAction', this)">Trader Action</div>
+        <div class="mnp-tab" onclick="macroHealthSwitchTab('sectorImpact', this)">Sector Impact</div>
+        <div class="mnp-tab" onclick="macroHealthSwitchTab('alerts', this)">Alerts</div>
+      </div>
+
+      <div class="macro-health-tab-panels">
+        <div id="macroHealthTab-traderAction" class="macro-health-tab-panel active">
+          <div class="macro-health-action macro-health-cell" id="macro-trader-action">Waiting for macro signal…</div>
+        </div>
+
+        <div id="macroHealthTab-sectorImpact" class="macro-health-tab-panel">
+          <div class="macro-sector-list macro-health-cell" id="macro-sector-list">
+            <div class="macro-sector-item">Loading sector impact…</div>
+          </div>
+        </div>
+
+        <div id="macroHealthTab-alerts" class="macro-health-tab-panel">
+          <div id="macro-health-alerts" class="macro-health-cell">
+            <div class="macro-health-alert macro-health-alert-neutral">No alerts yet.</div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -343,41 +391,6 @@
       <div class="macro-row">
         <span class="macro-key">CPI Inflation</span>
         <span class="macro-val" id="macro-cpi" style="color:var(--text)">4.31% <span style="font-size:9px;color:var(--muted)">Feb'25</span></span>
-      </div>
-    </div>
-
-    <div class="panel-block">
-      <div class="pb-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <span>Macro Health</span>
-        <span id="macro-health-badge" class="macro-health-badge macro-health-yellow">CAUTION</span>
-      </div>
-      <div class="macro-health-top">
-        <div class="macro-health-score-wrap">
-          <div class="macro-health-score-label">Health Score</div>
-          <div class="macro-health-score" id="macro-health-score">—</div>
-        </div>
-        <div class="macro-health-signal-wrap">
-          <div class="macro-health-score-label">Trader Signal</div>
-          <div class="macro-health-signal" id="macro-health-signal">Loading…</div>
-        </div>
-      </div>
-      <div class="macro-health-updated" id="macro-health-updated">updated —</div>
-
-      <div class="macro-health-grid" id="macro-health-cards">
-        <div class="macro-health-card skeleton">Fetching macro data…</div>
-      </div>
-
-      <div class="macro-health-subtitle">Trader Action</div>
-      <div class="macro-health-action" id="macro-trader-action">Waiting for macro signal…</div>
-
-      <div class="macro-health-subtitle">Alerts</div>
-      <div id="macro-health-alerts">
-        <div class="macro-health-alert macro-health-alert-neutral">No alerts yet.</div>
-      </div>
-
-      <div class="macro-health-subtitle">Sector Impact</div>
-      <div class="macro-sector-list" id="macro-sector-list">
-        <div class="macro-sector-item">Loading sector impact…</div>
       </div>
     </div>
 
