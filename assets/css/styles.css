@@ -834,8 +834,6 @@
     border-top: 1px solid var(--border);
     padding-top: 14px;
   }
-  .macro-health-center-panel .mnp-tabs { justify-content: flex-start; gap: 8px; }
-  .macro-health-center-panel .mnp-tab { flex: 0 0 auto; padding: 4px 12px; }
   .macro-health-center-title { margin-bottom: 8px; }
   .macro-health-tabs { margin: 12px 0 8px; flex-wrap: wrap; }
   .macro-health-tab-panels {
@@ -854,31 +852,6 @@
     min-height: 88px;
   }
   #macro-health-alerts.macro-health-cell .macro-health-alert:last-child { margin-bottom: 0; }
-  .macro-insight-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 100120;
-    background: rgba(3,5,16,0.74);
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-    padding: 18px;
-  }
-  .macro-insight-card {
-    width: min(760px, 96vw);
-    max-height: 82vh;
-    overflow-y: auto;
-    border: 1px solid rgba(255,107,0,0.25);
-    border-radius: 12px;
-    background: #090d1e;
-    box-shadow: 0 12px 50px rgba(0,0,0,0.5);
-    padding: 14px;
-  }
-  .macro-insight-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .macro-insight-title { font-family: 'JetBrains Mono', monospace; color: #ffd180; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
-  .macro-insight-close { border: 1px solid var(--border); background: #11162c; color: #d4dbff; border-radius: 6px; padding: 3px 8px; cursor: pointer; }
-  .macro-insight-body { white-space: pre-wrap; font-size: 13px; line-height: 1.55; color: #e9eeff; }
 
   .fii-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
 
