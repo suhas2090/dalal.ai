@@ -400,36 +400,6 @@ function fmtMacroValue(val) {
   return Number(val).toFixed(2);
 }
 
-const MACRO_THRESHOLDS = {
-  gdpGrowth: { goodMin: 6, warnMin: 5 },
-  iip: { goodMin: 4, warnMin: 1.5 },
-  cpi: { goodMax: 5, warnMax: 6 },
-  wpi: { goodMax: 4, warnMax: 6 },
-  credit: { goodMin: 45, warnMin: 35 },
-  forex: { goodMin: 5.5e11, warnMin: 4.8e11 },
-  unemployment: { goodMax: 6, warnMax: 7.5 }
-};
-
-let latestMacroHealthData = null;
-let macroInsightCache = {};
-
-function scoreIndicatorStatus(key, value) {
-  const rule = MACRO_THRESHOLDS[key];
-  if (!rule || !Number.isFinite(Number(value))) return 'yellow';
-  const v = Number(value);
-  if (Number.isFinite(rule.goodMin) && Number.isFinite(rule.warnMin)) {
-    if (v >= rule.goodMin) return 'green';
-    if (v >= rule.warnMin) return 'yellow';
-    return 'red';
-  }
-  if (Number.isFinite(rule.goodMax) && Number.isFinite(rule.warnMax)) {
-    if (v <= rule.goodMax) return 'green';
-    if (v <= rule.warnMax) return 'yellow';
-    return 'red';
-  }
-  return 'yellow';
-}
-
 function macroHealthSwitchTab(tabKey, tabEl) {
   const tabsWrap = document.getElementById('macroHealthTabs');
   if (tabsWrap) tabsWrap.querySelectorAll('.mnp-tab').forEach((tab) => tab.classList.remove('active'));
@@ -462,24 +432,6 @@ function normalizeMacroHealthData(data) {
   };
 }
 
-function ensureIndicatorsShape(data) {
-  const copy = { ...(data || {}) };
-  if (copy.indicators && Object.keys(copy.indicators).length) return copy;
-  const seed = {
-    gdpGrowth: { label: 'GDP Growth', value: copy.gdpGrowth, previous: copy.gdpGrowthPrev, unit: '%' },
-    iip: { label: 'IIP', value: copy.iip, previous: copy.iipPrev, unit: '%' },
-    cpi: { label: 'CPI Inflation', value: copy.cpi, previous: copy.cpiPrev, unit: '%' },
-    wpi: { label: 'WPI Inflation', value: copy.wpi, previous: copy.wpiPrev, unit: '%' },
-    credit: { label: 'Credit to Private Sector', value: copy.credit, previous: copy.creditPrev, unit: '% of GDP' },
-    forex: { label: 'Forex Reserves', value: copy.forex, previous: copy.forexPrev, unit: 'USD' },
-    unemployment: { label: 'Unemployment', value: copy.unemployment, previous: copy.unemploymentPrev, unit: '%' }
-  };
-  copy.indicators = Object.fromEntries(
-    Object.entries(seed).map(([k, v]) => [k, { ...v, trend: v.value > v.previous ? 'up' : v.value < v.previous ? 'down' : 'flat' }])
-  );
-  return copy;
-}
-
 async function maybeGenerateMacroAI(data) {
   if (!data || !CONFIG.GROQ_API_KEY) return {};
   const cacheKey = 'dalal_macro_ai_v1';
@@ -500,7 +452,7 @@ Indicators:
 ${indicators}
 
 Return JSON exactly:
-{"traderAction":"<max 45 words, specific trade posture>","healthJustification":"<max 32 words; why score is this value>","missingValues":{"iip":<number or null>,"wpi":<number or null>},"sectorImpact":{"itSoftware":"<max 16 words>","banks":"<max 16 words>","autoManufacturing":"<max 16 words>","defensive":"<max 16 words>"}}`;
+{"traderAction":"<max 45 words, specific trade posture>","sectorImpact":{"itSoftware":"<max 16 words>","banks":"<max 16 words>","autoManufacturing":"<max 16 words>","defensive":"<max 16 words>"}}`;
 
   const raw = await groqChat(sys, usr, 260);
   const parsed = macroSafeJSON(raw);
@@ -509,65 +461,10 @@ Return JSON exactly:
   const out = {
     generatedAt: now,
     traderAction: parsed.traderAction || '',
-    healthJustification: parsed.healthJustification || '',
-    missingValues: parsed.missingValues || {},
     sectorImpact: parsed.sectorImpact || {},
   };
   localStorage.setItem(cacheKey, JSON.stringify(out));
   return out;
-}
-
-async function generateMacroIndicatorInsight(indicatorKey, indicator) {
-  if (!indicator) return 'No insight available for this macro right now.';
-  const ck = `${indicatorKey}_${indicator.value}_${indicator.previous}`;
-  if (macroInsightCache[ck]) return macroInsightCache[ck];
-  if (!CONFIG.GROQ_API_KEY) {
-    return `Meaning: ${indicator.label} indicates broad macro momentum.\nImpact: influences sector rotation, valuations, and risk appetite.\n% Change: previous data not available.\nSummary: Monitor this with RBI policy, inflation trend, and global growth cues.`;
-  }
-  const prev = Number(indicator.previous);
-  const curr = Number(indicator.value);
-  const pct = (Number.isFinite(curr) && Number.isFinite(prev) && prev !== 0) ? (((curr - prev) / Math.abs(prev)) * 100).toFixed(2) : 'N/A';
-  const sys = `You are an India-focused macro strategist. Be concise and practical for traders.
-Return plain text with 4 labeled lines: Meaning, Impact, % Change, Summary.`;
-  const usr = `Indicator: ${indicator.label}
-Current value: ${fmtMacroValue(indicator.value)} ${indicator.unit || ''}
-Previous value: ${Number.isFinite(prev) ? prev : 'N/A'}
-Computed % change: ${pct}
-Include Indian context first and global context where relevant.
-Each line should be <= 35 words.`;
-  const out = await groqChat(sys, usr, 220);
-  macroInsightCache[ck] = out || 'Insight unavailable at the moment.';
-  return macroInsightCache[ck];
-}
-
-function openMacroInsightModal(title, body) {
-  const modal = document.getElementById('macroInsightModal');
-  const modalTitle = document.getElementById('macroInsightTitle');
-  const modalBody = document.getElementById('macroInsightBody');
-  if (!modal || !modalTitle || !modalBody) return;
-  modalTitle.textContent = title;
-  modalBody.textContent = body;
-  modal.style.display = 'flex';
-}
-
-function closeMacroInsightModal(event, force = false) {
-  if (!force && event && event.currentTarget !== event.target) return;
-  const modal = document.getElementById('macroInsightModal');
-  if (modal) modal.style.display = 'none';
-}
-
-async function selectMacroIndicator(indicatorKey, tabEl) {
-  const tabsWrap = document.getElementById('macroExplorerTabs');
-  if (tabsWrap) tabsWrap.querySelectorAll('.mnp-tab').forEach((tab) => tab.classList.remove('active'));
-  if (tabEl) tabEl.classList.add('active');
-  const indicators = latestMacroHealthData?.indicators || {};
-  const indicator = indicators[indicatorKey];
-  if (!indicator) {
-    openMacroInsightModal('Macro Insight', 'Indicator data is currently unavailable.');
-    return;
-  }
-  const insight = await generateMacroIndicatorInsight(indicatorKey, indicator);
-  openMacroInsightModal(`${indicator.label || indicatorKey} Insight`, insight);
 }
 
 function updateMacroHealthUI(data) {
@@ -638,23 +535,14 @@ async function fetchMacroHealth() {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const payload = await res.json();
-    if (payload?.ok === false) throw new Error(payload?.error || 'invalid macro payload');
-    const data = ensureIndicatorsShape(normalizeMacroHealthData(payload));
+    if (!payload?.ok) throw new Error(payload?.error || 'invalid macro payload');
+    const data = normalizeMacroHealthData(payload);
     const ai = await maybeGenerateMacroAI(data);
 
     if (ai?.traderAction) data.traderActionRecommendation = ai.traderAction;
-    if (ai?.healthJustification) data.healthJustification = ai.healthJustification;
     if (ai?.sectorImpact && Object.keys(ai.sectorImpact).length) {
       data.sectorImpact = { ...(data.sectorImpact || {}), ...ai.sectorImpact };
     }
-    if (ai?.missingValues && data?.indicators) {
-      const missingIip = data.indicators.iip && !Number.isFinite(Number(data.indicators.iip.value));
-      const missingWpi = data.indicators.wpi && !Number.isFinite(Number(data.indicators.wpi.value));
-      if (missingIip && Number.isFinite(Number(ai.missingValues.iip))) data.indicators.iip.value = Number(ai.missingValues.iip);
-      if (missingWpi && Number.isFinite(Number(ai.missingValues.wpi))) data.indicators.wpi.value = Number(ai.missingValues.wpi);
-    }
-    Object.entries(data.indicators || {}).forEach(([k, v]) => { v.status = scoreIndicatorStatus(k, v.value); });
-    latestMacroHealthData = data;
     updateMacroHealthUI(data);
   } catch (e) {
     console.warn('Macro health fetch error:', e.message);
