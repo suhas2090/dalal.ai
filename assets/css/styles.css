@@ -145,7 +145,7 @@
   /* ── MAIN LAYOUT ── */
   .container {
     display: grid;
-    grid-template-columns: 280px 1fr 300px;
+    grid-template-columns: 320px 1fr 0;
     grid-template-rows: auto 1fr;
     min-height: calc(100vh - 56px);
     position: relative;
@@ -160,6 +160,7 @@
     flex-direction: column;
     gap: 0;
     background: var(--surface);
+    overflow-y: auto;
   }
 
   .sidebar-section {
@@ -705,11 +706,7 @@
 
   /* ── RIGHT SIDEBAR ── */
   .sidebar-right {
-    border-left: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+    display: none;
   }
 
   .panel-block {
@@ -774,8 +771,8 @@
     letter-spacing: 1px;
     margin-bottom: 4px;
   }
-  .macro-health-score { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--text); }
-  .macro-health-signal { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); margin-top: 3px; }
+  .macro-health-score { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: #fff8de; }
+  .macro-health-signal { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--gold); margin-top: 3px; line-height: 1.45; font-weight: 600; }
   .macro-health-updated {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
@@ -797,13 +794,16 @@
   .macro-health-card {
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 6px;
-    background: var(--panel);
+    padding: 9px 10px;
+    background: #0d1020;
     min-height: 52px;
   }
   .macro-health-card.skeleton { grid-column: 1 / -1; color: var(--muted); font-size: 11px; display: flex; align-items: center; justify-content: center; }
-  .mh-name { font-size: 9px; color: var(--muted); margin-bottom: 3px; line-height: 1.2; }
-  .mh-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 2px; }
+  .mh-name { font-size: 10px; color: #9098bf; margin-bottom: 4px; line-height: 1.2; letter-spacing: 1px; text-transform: uppercase; }
+  .mh-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; margin-bottom: 2px; font-weight: 700; color: #ffd54f; }
+  .macro-health-card.macro-health-green .mh-value { color: #68f8b2; }
+  .macro-health-card.macro-health-red .mh-value { color: #ff8da6; }
+  .macro-health-card.macro-health-yellow .mh-value { color: #ffd54f; }
   .mh-date { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted); }
   .macro-health-subtitle {
     margin: 10px 0 6px;
@@ -829,6 +829,56 @@
   .macro-sector-list { display: flex; flex-direction: column; gap: 6px; }
   .macro-sector-item { font-size: 10px; line-height: 1.35; color: var(--text); border-left: 2px solid var(--border); padding-left: 7px; }
   .macro-sector-item strong { color: var(--saffron); font-size: 9px; letter-spacing: .5px; }
+  .macro-health-center-panel {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .macro-health-center-panel .mnp-tabs { justify-content: flex-start; gap: 8px; }
+  .macro-health-center-panel .mnp-tab { flex: 0 0 auto; padding: 4px 12px; }
+  .macro-health-center-title { margin-bottom: 8px; }
+  .macro-health-tabs { margin: 12px 0 8px; flex-wrap: wrap; }
+  .macro-health-tab-panels {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    min-height: 116px;
+  }
+  .macro-health-tab-panel { display: none; padding: 10px; }
+  .macro-health-tab-panel.active { display: block; }
+  .macro-health-cell {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 7px;
+    padding: 10px;
+    background: rgba(255,255,255,0.01);
+    min-height: 88px;
+  }
+  #macro-health-alerts.macro-health-cell .macro-health-alert:last-child { margin-bottom: 0; }
+  .macro-insight-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100120;
+    background: rgba(3,5,16,0.74);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    padding: 18px;
+  }
+  .macro-insight-card {
+    width: min(760px, 96vw);
+    max-height: 82vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255,107,0,0.25);
+    border-radius: 12px;
+    background: #090d1e;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.5);
+    padding: 14px;
+  }
+  .macro-insight-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .macro-insight-title { font-family: 'JetBrains Mono', monospace; color: #ffd180; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .macro-insight-close { border: 1px solid var(--border); background: #11162c; color: #d4dbff; border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+  .macro-insight-body { white-space: pre-wrap; font-size: 13px; line-height: 1.55; color: #e9eeff; }
 
   .fii-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
 
