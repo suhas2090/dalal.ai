@@ -478,6 +478,8 @@ function updateMacroHealthUI(data) {
   const sectors = document.getElementById('macro-sector-list');
 
   if (!badge || !score || !signal || !updated || !cards || !alerts || !action || !sectors) return;
+  const signalLabel = document.querySelector('.macro-health-signal-wrap .macro-health-score-label');
+  if (signalLabel) signalLabel.textContent = 'Score Justification';
 
   const badgeState = (data.healthBadge || 'yellow').toLowerCase();
   badge.classList.remove('macro-health-green', 'macro-health-yellow', 'macro-health-red');
