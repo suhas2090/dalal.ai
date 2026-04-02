@@ -432,6 +432,19 @@ function normalizeMacroHealthData(data) {
   };
 }
 
+function sanitizeMacroText(value) {
+  if (typeof value !== 'string') return '';
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return value.replace(/[&<>"']/g, (char) => map[char]).trim();
+}
+
+function sanitizeSectorImpact(sectorImpact) {
+  if (!sectorImpact || typeof sectorImpact !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(sectorImpact).map(([key, value]) => [key, sanitizeMacroText(value)])
+  );
+}
+
 async function maybeGenerateMacroAI(data) {
   if (!data || !CONFIG.GROQ_API_KEY) return {};
   const cacheKey = 'dalal_macro_ai_v1';
@@ -460,8 +473,8 @@ Return JSON exactly:
 
   const out = {
     generatedAt: now,
-    traderAction: parsed.traderAction || '',
-    sectorImpact: parsed.sectorImpact || {},
+    traderAction: sanitizeMacroText(parsed.traderAction),
+    sectorImpact: sanitizeSectorImpact(parsed.sectorImpact),
   };
   localStorage.setItem(cacheKey, JSON.stringify(out));
   return out;
@@ -518,7 +531,7 @@ function updateMacroHealthUI(data) {
     ).join('')
     : '<div class="macro-health-alert macro-health-alert-neutral">No macro warnings right now.</div>';
 
-  const s = data.sectorImpact || {};
+  const s = sanitizeSectorImpact(data.sectorImpact);
   sectors.innerHTML = `
     <div class="macro-sector-item"><strong>IT / SOFTWARE</strong> — ${s.itSoftware || '—'}</div>
     <div class="macro-sector-item"><strong>BANKS</strong> — ${s.banks || '—'}</div>
@@ -539,7 +552,10 @@ async function fetchMacroHealth() {
 
     if (ai?.traderAction) data.traderActionRecommendation = ai.traderAction;
     if (ai?.sectorImpact && Object.keys(ai.sectorImpact).length) {
-      data.sectorImpact = { ...(data.sectorImpact || {}), ...ai.sectorImpact };
+      data.sectorImpact = {
+        ...sanitizeSectorImpact(data.sectorImpact),
+        ...sanitizeSectorImpact(ai.sectorImpact),
+      };
     }
     updateMacroHealthUI(data);
   } catch (e) {
