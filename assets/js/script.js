@@ -400,6 +400,73 @@ function fmtMacroValue(val) {
   return Number(val).toFixed(2);
 }
 
+function macroHealthSwitchTab(tabKey, tabEl) {
+  const tabsWrap = document.getElementById('macroHealthTabs');
+  if (tabsWrap) tabsWrap.querySelectorAll('.mnp-tab').forEach((tab) => tab.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+
+  document.querySelectorAll('.macro-health-tab-panel').forEach((panel) => panel.classList.remove('active'));
+  const activePanel = document.getElementById(`macroHealthTab-${tabKey}`);
+  if (activePanel) activePanel.classList.add('active');
+}
+
+function macroSafeJSON(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  try { return JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch (_) { return null; }
+}
+
+function normalizeMacroHealthData(data) {
+  if (!data || typeof data !== 'object') return null;
+  const signal = data.traderSignal || data.signal || 'CAUTION';
+  const score = Number(data.economicHealthScore ?? data.healthScore);
+  const normalizedAlerts = (Array.isArray(data.alerts) ? data.alerts : [])
+    .map((a) => (typeof a === 'string' ? { severity: 'caution', message: a } : a))
+    .filter((a) => a?.message);
+
+  return {
+    ...data,
+    traderSignal: signal,
+    economicHealthScore: Number.isFinite(score) ? score : null,
+    traderActionRecommendation: data.traderActionRecommendation || data.recommendation || '',
+    alerts: normalizedAlerts,
+  };
+}
+
+async function maybeGenerateMacroAI(data) {
+  if (!data || !CONFIG.GROQ_API_KEY) return {};
+  const cacheKey = 'dalal_macro_ai_v1';
+  const now = Date.now();
+  const existing = macroSafeJSON(localStorage.getItem(cacheKey));
+  if (existing?.generatedAt && (now - existing.generatedAt) < 24 * 60 * 60 * 1000) return existing;
+
+  const indicators = Object.values(data.indicators || {})
+    .slice(0, 6)
+    .map((i) => `${i.label || 'Indicator'}: ${fmtMacroValue(i.value)}${i.unit ? ` ${i.unit}` : ''} (${i.trend || 'flat'})`)
+    .join('\n');
+
+  const sys = `You are a concise Indian macro strategist for active equity traders.
+Respond ONLY in valid JSON.`;
+  const usr = `Signal: ${data.traderSignal || 'CAUTION'}
+Health score: ${data.economicHealthScore ?? 'NA'}
+Indicators:
+${indicators}
+
+Return JSON exactly:
+{"traderAction":"<max 45 words, specific trade posture>","sectorImpact":{"itSoftware":"<max 16 words>","banks":"<max 16 words>","autoManufacturing":"<max 16 words>","defensive":"<max 16 words>"}}`;
+
+  const raw = await groqChat(sys, usr, 260);
+  const parsed = macroSafeJSON(raw);
+  if (!parsed) return {};
+
+  const out = {
+    generatedAt: now,
+    traderAction: parsed.traderAction || '',
+    sectorImpact: parsed.sectorImpact || {},
+  };
+  localStorage.setItem(cacheKey, JSON.stringify(out));
+  return out;
+}
+
 function updateMacroHealthUI(data) {
   const badge = document.getElementById('macro-health-badge');
   const score = document.getElementById('macro-health-score');
@@ -465,8 +532,15 @@ async function fetchMacroHealth() {
     const url = new URL('/api/macro-health', WORKER_URL).toString();
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!data?.ok) throw new Error(data?.error || 'invalid macro payload');
+    const payload = await res.json();
+    if (!payload?.ok) throw new Error(payload?.error || 'invalid macro payload');
+    const data = normalizeMacroHealthData(payload);
+    const ai = await maybeGenerateMacroAI(data);
+
+    if (ai?.traderAction) data.traderActionRecommendation = ai.traderAction;
+    if (ai?.sectorImpact && Object.keys(ai.sectorImpact).length) {
+      data.sectorImpact = { ...(data.sectorImpact || {}), ...ai.sectorImpact };
+    }
     updateMacroHealthUI(data);
   } catch (e) {
     console.warn('Macro health fetch error:', e.message);
