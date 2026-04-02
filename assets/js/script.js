@@ -400,6 +400,158 @@ function fmtMacroValue(val) {
   return Number(val).toFixed(2);
 }
 
+const MACRO_THRESHOLDS = {
+  gdpGrowth: { goodMin: 6, warnMin: 5 },
+  iip: { goodMin: 4, warnMin: 1.5 },
+  cpi: { goodMax: 5, warnMax: 6 },
+  wpi: { goodMax: 4, warnMax: 6 },
+  credit: { goodMin: 45, warnMin: 35 },
+  forex: { goodMin: 5.5e11, warnMin: 4.8e11 },
+  unemployment: { goodMax: 6, warnMax: 7.5 }
+};
+
+let latestMacroHealthData = null;
+let macroInsightCache = {};
+
+function scoreIndicatorStatus(key, value) {
+  const rule = MACRO_THRESHOLDS[key];
+  if (!rule || !Number.isFinite(Number(value))) return 'yellow';
+  const v = Number(value);
+  if (Number.isFinite(rule.goodMin) && Number.isFinite(rule.warnMin)) {
+    if (v >= rule.goodMin) return 'green';
+    if (v >= rule.warnMin) return 'yellow';
+    return 'red';
+  }
+  if (Number.isFinite(rule.goodMax) && Number.isFinite(rule.warnMax)) {
+    if (v <= rule.goodMax) return 'green';
+    if (v <= rule.warnMax) return 'yellow';
+    return 'red';
+  }
+  return 'yellow';
+}
+
+function macroHealthSwitchTab(tabKey, tabEl) {
+  const tabsWrap = document.getElementById('macroHealthTabs');
+  if (tabsWrap) tabsWrap.querySelectorAll('.mnp-tab').forEach((tab) => tab.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+
+  document.querySelectorAll('.macro-health-tab-panel').forEach((panel) => panel.classList.remove('active'));
+  const activePanel = document.getElementById(`macroHealthTab-${tabKey}`);
+  if (activePanel) activePanel.classList.add('active');
+}
+
+function macroSafeJSON(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  try { return JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch (_) { return null; }
+}
+
+function normalizeMacroHealthData(data) {
+  if (!data || typeof data !== 'object') return null;
+  const signal = data.traderSignal || data.signal || 'CAUTION';
+  const score = Number(data.economicHealthScore ?? data.healthScore);
+  const normalizedAlerts = (Array.isArray(data.alerts) ? data.alerts : [])
+    .map((a) => (typeof a === 'string' ? { severity: 'caution', message: a } : a))
+    .filter((a) => a?.message);
+
+  return {
+    ...data,
+    traderSignal: signal,
+    economicHealthScore: Number.isFinite(score) ? score : null,
+    traderActionRecommendation: data.traderActionRecommendation || data.recommendation || '',
+    alerts: normalizedAlerts,
+  };
+}
+
+async function maybeGenerateMacroAI(data) {
+  if (!data || !CONFIG.GROQ_API_KEY) return {};
+  const cacheKey = 'dalal_macro_ai_v1';
+  const now = Date.now();
+  const existing = macroSafeJSON(localStorage.getItem(cacheKey));
+  if (existing?.generatedAt && (now - existing.generatedAt) < 24 * 60 * 60 * 1000) return existing;
+
+  const indicators = Object.values(data.indicators || {})
+    .slice(0, 6)
+    .map((i) => `${i.label || 'Indicator'}: ${fmtMacroValue(i.value)}${i.unit ? ` ${i.unit}` : ''} (${i.trend || 'flat'})`)
+    .join('\n');
+
+  const sys = `You are a concise Indian macro strategist for active equity traders.
+Respond ONLY in valid JSON.`;
+  const usr = `Signal: ${data.traderSignal || 'CAUTION'}
+Health score: ${data.economicHealthScore ?? 'NA'}
+Indicators:
+${indicators}
+
+Return JSON exactly:
+{"traderAction":"<max 45 words, specific trade posture>","healthJustification":"<max 32 words; why score is this value>","missingValues":{"iip":<number or null>,"wpi":<number or null>},"sectorImpact":{"itSoftware":"<max 16 words>","banks":"<max 16 words>","autoManufacturing":"<max 16 words>","defensive":"<max 16 words>"}}`;
+
+  const raw = await groqChat(sys, usr, 260);
+  const parsed = macroSafeJSON(raw);
+  if (!parsed) return {};
+
+  const out = {
+    generatedAt: now,
+    traderAction: parsed.traderAction || '',
+    healthJustification: parsed.healthJustification || '',
+    missingValues: parsed.missingValues || {},
+    sectorImpact: parsed.sectorImpact || {},
+  };
+  localStorage.setItem(cacheKey, JSON.stringify(out));
+  return out;
+}
+
+async function generateMacroIndicatorInsight(indicatorKey, indicator) {
+  if (!indicator) return 'No insight available for this macro right now.';
+  const ck = `${indicatorKey}_${indicator.value}_${indicator.previous}`;
+  if (macroInsightCache[ck]) return macroInsightCache[ck];
+  if (!CONFIG.GROQ_API_KEY) {
+    return `Meaning: ${indicator.label} indicates broad macro momentum.\nImpact: influences sector rotation, valuations, and risk appetite.\n% Change: previous data not available.\nSummary: Monitor this with RBI policy, inflation trend, and global growth cues.`;
+  }
+  const prev = Number(indicator.previous);
+  const curr = Number(indicator.value);
+  const pct = (Number.isFinite(curr) && Number.isFinite(prev) && prev !== 0) ? (((curr - prev) / Math.abs(prev)) * 100).toFixed(2) : 'N/A';
+  const sys = `You are an India-focused macro strategist. Be concise and practical for traders.
+Return plain text with 4 labeled lines: Meaning, Impact, % Change, Summary.`;
+  const usr = `Indicator: ${indicator.label}
+Current value: ${fmtMacroValue(indicator.value)} ${indicator.unit || ''}
+Previous value: ${Number.isFinite(prev) ? prev : 'N/A'}
+Computed % change: ${pct}
+Include Indian context first and global context where relevant.
+Each line should be <= 35 words.`;
+  const out = await groqChat(sys, usr, 220);
+  macroInsightCache[ck] = out || 'Insight unavailable at the moment.';
+  return macroInsightCache[ck];
+}
+
+function openMacroInsightModal(title, body) {
+  const modal = document.getElementById('macroInsightModal');
+  const modalTitle = document.getElementById('macroInsightTitle');
+  const modalBody = document.getElementById('macroInsightBody');
+  if (!modal || !modalTitle || !modalBody) return;
+  modalTitle.textContent = title;
+  modalBody.textContent = body;
+  modal.style.display = 'flex';
+}
+
+function closeMacroInsightModal(event, force = false) {
+  if (!force && event && event.currentTarget !== event.target) return;
+  const modal = document.getElementById('macroInsightModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function selectMacroIndicator(indicatorKey, tabEl) {
+  const tabsWrap = document.getElementById('macroExplorerTabs');
+  if (tabsWrap) tabsWrap.querySelectorAll('.mnp-tab').forEach((tab) => tab.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  const indicators = latestMacroHealthData?.indicators || {};
+  const indicator = indicators[indicatorKey];
+  if (!indicator) {
+    openMacroInsightModal('Macro Insight', 'Indicator data is currently unavailable.');
+    return;
+  }
+  const insight = await generateMacroIndicatorInsight(indicatorKey, indicator);
+  openMacroInsightModal(`${indicator.label || indicatorKey} Insight`, insight);
+}
+
 function updateMacroHealthUI(data) {
   const badge = document.getElementById('macro-health-badge');
   const score = document.getElementById('macro-health-score');
@@ -420,7 +572,7 @@ function updateMacroHealthUI(data) {
   const scoreVal = Number(data.economicHealthScore);
   score.textContent = Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—';
 
-  signal.textContent = data.traderSignal || 'CAUTION';
+  signal.textContent = data.healthJustification || data.traderSignal || 'Justification unavailable';
   signal.style.color =
     data.traderSignal === 'BULLISH' ? 'var(--green)'
       : data.traderSignal === 'BEARISH' ? 'var(--red)'
@@ -431,9 +583,9 @@ function updateMacroHealthUI(data) {
     : null;
   updated.textContent = `updated ${istTime ? `${istTime} IST` : '—'}`;
 
-  const indicatorEntries = Object.values(data.indicators || {});
-  cards.innerHTML = indicatorEntries.map((item) => {
-    const cls = macroClassFromStatus(item.status);
+  const indicatorEntries = Object.entries(data.indicators || {});
+  cards.innerHTML = indicatorEntries.map(([key, item]) => {
+    const cls = macroClassFromStatus(scoreIndicatorStatus(key, item.value));
     const trendIcon = item.trend === 'up' ? '▲' : item.trend === 'down' ? '▼' : '•';
     return `<div class="macro-health-card ${cls}">
       <div class="mh-name">${item.label || 'Indicator'}</div>
@@ -465,8 +617,24 @@ async function fetchMacroHealth() {
     const url = new URL('/api/macro-health', WORKER_URL).toString();
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!data?.ok) throw new Error(data?.error || 'invalid macro payload');
+    const payload = await res.json();
+    if (!payload?.ok) throw new Error(payload?.error || 'invalid macro payload');
+    const data = normalizeMacroHealthData(payload);
+    const ai = await maybeGenerateMacroAI(data);
+
+    if (ai?.traderAction) data.traderActionRecommendation = ai.traderAction;
+    if (ai?.healthJustification) data.healthJustification = ai.healthJustification;
+    if (ai?.sectorImpact && Object.keys(ai.sectorImpact).length) {
+      data.sectorImpact = { ...(data.sectorImpact || {}), ...ai.sectorImpact };
+    }
+    if (ai?.missingValues && data?.indicators) {
+      const missingIip = data.indicators.iip && !Number.isFinite(Number(data.indicators.iip.value));
+      const missingWpi = data.indicators.wpi && !Number.isFinite(Number(data.indicators.wpi.value));
+      if (missingIip && Number.isFinite(Number(ai.missingValues.iip))) data.indicators.iip.value = Number(ai.missingValues.iip);
+      if (missingWpi && Number.isFinite(Number(ai.missingValues.wpi))) data.indicators.wpi.value = Number(ai.missingValues.wpi);
+    }
+    Object.entries(data.indicators || {}).forEach(([k, v]) => { v.status = scoreIndicatorStatus(k, v.value); });
+    latestMacroHealthData = data;
     updateMacroHealthUI(data);
   } catch (e) {
     console.warn('Macro health fetch error:', e.message);
