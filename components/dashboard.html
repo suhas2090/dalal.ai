@@ -322,29 +322,6 @@
     <!-- ③ MACRO HEALTH EXPLORER PANEL -->
     <div class="main-news-panel x-feed-panel">
       <div class="mnp-section-label" style="margin-bottom:10px">
-        <span>🧭 Macro Health Explorer</span>
-        <span id="macroExplorerTs" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">updated —</span>
-      </div>
-
-      <div class="macro-explorer-topline">
-        <div id="macro-explorer-badge" class="macro-health-badge macro-health-yellow">CAUTION</div>
-        <div id="macro-explorer-score" class="macro-explorer-score">Score: —</div>
-        <div id="macro-explorer-signal" class="macro-explorer-signal">Signal: —</div>
-      </div>
-
-      <div class="mnp-tabs" id="macroExplorerTabs" style="margin-bottom:10px;flex-wrap:wrap">
-        <div class="mnp-tab active" data-macro-key="gdpGrowth" onclick="selectMacroIndicator('gdpGrowth',this)">GDP</div>
-        <div class="mnp-tab" data-macro-key="iip" onclick="selectMacroIndicator('iip',this)">IIP</div>
-        <div class="mnp-tab" data-macro-key="cpi" onclick="selectMacroIndicator('cpi',this)">CPI</div>
-        <div class="mnp-tab" data-macro-key="wpi" onclick="selectMacroIndicator('wpi',this)">WPI</div>
-        <div class="mnp-tab" data-macro-key="credit" onclick="selectMacroIndicator('credit',this)">Credit</div>
-        <div class="mnp-tab" data-macro-key="forex" onclick="selectMacroIndicator('forex',this)">Forex</div>
-        <div class="mnp-tab" data-macro-key="unemployment" onclick="selectMacroIndicator('unemployment',this)">Unemployment</div>
-      </div>
-
-    <div id="macroExplorerOverview" class="macro-explorer-overview">Loading macro overview…</div>
-      <div id="macroExplorerDetail" class="macro-explorer-detail">Select any macro tab to load historical values + 7-line Groq summary.</div>
-    </div>
 
     <!-- ⑤ MACRO HEALTH PANEL (CENTER) -->
     <div class="main-news-panel x-feed-panel macro-health-center-panel">
@@ -359,7 +336,7 @@
           <div class="macro-health-score" id="macro-health-score">—</div>
         </div>
         <div class="macro-health-signal-wrap">
-          <div class="macro-health-score-label">Score Justification</div>
+          <div class="macro-health-score-label">Trader Signal</div>
           <div class="macro-health-signal" id="macro-health-signal">Loading…</div>
         </div>
       </div>
@@ -397,9 +374,105 @@
   </div>
 
   <!-- RIGHT SIDEBAR -->
+  <div class="sidebar-right">
+
+    <!-- MMI BLOCK -->
+    <div class="panel-block">
+      <div class="pb-label">Market Mood Index <span style="float:right;font-size:8px;color:var(--muted)">Tickertape</span></div>
+      <div class="mmi-wrap" id="mmiWrap">
+        <div class="mmi-gauge-row">
+          <svg class="mmi-arc-svg" viewBox="0 0 120 65">
+            <!-- Track -->
+            <path d="M10,60 A50,50 0 0,1 110,60" fill="none" stroke="#1E1E32" stroke-width="10" stroke-linecap="round"/>
+            <!-- Fill -->
+            <path id="mmiArcFill" d="M10,60 A50,50 0 0,1 110,60" fill="none" stroke="#FFD700" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="157.08" stroke-dashoffset="62.83"/>
+          </svg>
+          <div class="mmi-center-text">
+            <div class="mmi-score" id="mmiScore">—</div>
+            <div class="mmi-label-small">/ 100</div>
+          </div>
+        </div>
+        <div class="mmi-zone-label" id="mmiZoneLabel">Loading…</div>
+        <div class="mmi-bar-row">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--red)">FEAR</span>
+          <div class="mmi-gradient-bar">
+            <div class="mmi-needle" id="mmiNeedle" style="left:50%"></div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--green)">GREED</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted);text-align:center;margin-top:4px" id="mmiUpdated"></div>
+      </div>
+    </div>
+
+    <div class="panel-block news-panel-right">
+      <div class="mnp-section-label" style="margin-bottom:8px">
+        <span>🇮🇳 Indian Market News</span>
+        <span id="mnp-refresh-ts" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)"></span>
+      </div>
+      <div class="mnp-tabs">
+        <div class="mnp-tab active" onclick="mnpSwitchTab('et',this)">ET Markets</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('mint',this)">LiveMint</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('bs',this)">Business Std</div>
+        <div class="mnp-tab"        onclick="mnpSwitchTab('hindu',this)">Hindu BizLine</div>
+      </div>
+      <div class="mnp-headlines" id="mnp-headlines">
+        <div class="mnp-headline-loading">Fetching headlines…</div>
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <div class="pb-label">Macro Indicators</div>
+      <div class="macro-row">
+        <span class="macro-key">USD/INR</span>
+        <span class="macro-val" id="macro-usdinr">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-key">Brent Crude</span>
+        <span class="macro-val" id="macro-crude">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-key">Gold (MCX)</span>
+        <span class="macro-val" id="macro-gold">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-key">10Y G-Sec</span>
+        <span class="macro-val" id="macro-gsec">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-key">VIX India</span>
+        <span class="macro-val" id="macro-vix">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-key">CPI Inflation</span>
+        <span class="macro-val" id="macro-cpi" style="color:var(--text)">4.31% <span style="font-size:9px;color:var(--muted)">Feb'25</span></span>
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <div class="pb-label">FII / DII Flow (₹ Cr) <span id="fii-date" style="font-size:8px;color:var(--muted);float:right;font-family:monospace">as of —</span></div>
+      <div class="fii-bar-wrap">
+        <div class="fii-row">
+          <span class="fii-label">FPI</span>
+          <div class="fii-bar-bg">
+            <div class="fii-bar" id="fii-bar" style="width:50%; background:var(--green)"></div>
+          </div>
+        </div>
+
+        <div id="macroHealthTab-alerts" class="macro-health-tab-panel">
+          <div id="macro-health-alerts" class="macro-health-cell">
+            <div class="macro-health-alert macro-health-alert-neutral">No alerts yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
   <div class="sidebar-right"></div>
 
-  <div id="macroInsightModal" class="macro-insight-modal" style="display:none" onclick="closeMacroInsightModal(event)">
+  <div id="macroInsightModal" class="macro-insight-modal" onclick="closeMacroInsightModal(event)">
     <div class="macro-insight-card" onclick="event.stopPropagation()">
       <div class="macro-insight-head">
         <div id="macroInsightTitle" class="macro-insight-title">Macro Insight</div>
