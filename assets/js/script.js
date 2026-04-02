@@ -546,8 +546,10 @@ async function fetchMacroHealth() {
     console.warn('Macro health fetch error:', e.message);
     const updated = document.getElementById('macro-health-updated');
     const alerts = document.getElementById('macro-health-alerts');
+    const cards = document.getElementById('macro-health-cards');
     if (updated) updated.textContent = 'updated —';
     if (alerts) alerts.innerHTML = `<div class="macro-health-alert macro-health-alert-warning">Macro health unavailable (${e.message}).</div>`;
+    if (cards) cards.innerHTML = '<div class="macro-health-card skeleton">Macro indicators unavailable right now.</div>';
   }
 }
 
