@@ -487,7 +487,7 @@ function updateMacroHealthUI(data) {
   const scoreVal = Number(data.economicHealthScore);
   score.textContent = Number.isFinite(scoreVal) ? (scoreVal > 0 ? `+${scoreVal}` : `${scoreVal}`) : '—';
 
-  signal.textContent = data.traderSignal || 'CAUTION';
+  signal.textContent = data.healthJustification || data.traderSignal || 'Justification unavailable';
   signal.style.color =
     data.traderSignal === 'BULLISH' ? 'var(--green)'
       : data.traderSignal === 'BEARISH' ? 'var(--red)'
@@ -498,9 +498,9 @@ function updateMacroHealthUI(data) {
     : null;
   updated.textContent = `updated ${istTime ? `${istTime} IST` : '—'}`;
 
-  const indicatorEntries = Object.values(data.indicators || {});
-  cards.innerHTML = indicatorEntries.map((item) => {
-    const cls = macroClassFromStatus(item.status);
+  const indicatorEntries = Object.entries(data.indicators || {});
+  cards.innerHTML = indicatorEntries.map(([key, item]) => {
+    const cls = macroClassFromStatus(scoreIndicatorStatus(key, item.value));
     const trendIcon = item.trend === 'up' ? '▲' : item.trend === 'down' ? '▼' : '•';
     return `<div class="macro-health-card ${cls}">
       <div class="mh-name">${item.label || 'Indicator'}</div>

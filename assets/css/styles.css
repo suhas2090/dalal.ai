@@ -145,7 +145,7 @@
   /* ── MAIN LAYOUT ── */
   .container {
     display: grid;
-    grid-template-columns: 280px 1fr 300px;
+    grid-template-columns: 320px 1fr 0;
     grid-template-rows: auto 1fr;
     min-height: calc(100vh - 56px);
     position: relative;
@@ -160,6 +160,7 @@
     flex-direction: column;
     gap: 0;
     background: var(--surface);
+    overflow-y: auto;
   }
 
   .sidebar-section {
@@ -705,11 +706,7 @@
 
   /* ── RIGHT SIDEBAR ── */
   .sidebar-right {
-    border-left: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+    display: none;
   }
 
   .panel-block {
@@ -774,8 +771,8 @@
     letter-spacing: 1px;
     margin-bottom: 4px;
   }
-  .macro-health-score { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--text); }
-  .macro-health-signal { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); margin-top: 3px; }
+  .macro-health-score { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: #fff8de; }
+  .macro-health-signal { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--gold); margin-top: 3px; line-height: 1.45; font-weight: 600; }
   .macro-health-updated {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
@@ -797,13 +794,16 @@
   .macro-health-card {
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 6px;
-    background: var(--panel);
+    padding: 9px 10px;
+    background: #0d1020;
     min-height: 52px;
   }
   .macro-health-card.skeleton { grid-column: 1 / -1; color: var(--muted); font-size: 11px; display: flex; align-items: center; justify-content: center; }
-  .mh-name { font-size: 9px; color: var(--muted); margin-bottom: 3px; line-height: 1.2; }
-  .mh-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 2px; }
+  .mh-name { font-size: 10px; color: #9098bf; margin-bottom: 4px; line-height: 1.2; letter-spacing: 1px; text-transform: uppercase; }
+  .mh-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; margin-bottom: 2px; font-weight: 700; color: #ffd54f; }
+  .macro-health-card.macro-health-green .mh-value { color: #68f8b2; }
+  .macro-health-card.macro-health-red .mh-value { color: #ff8da6; }
+  .macro-health-card.macro-health-yellow .mh-value { color: #ffd54f; }
   .mh-date { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted); }
   .macro-health-subtitle {
     margin: 10px 0 6px;
